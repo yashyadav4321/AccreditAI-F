@@ -9,8 +9,10 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { GraduationCap, ArrowRight, BarChart3, Loader2, Sparkles, Upload } from 'lucide-react';
+import { GraduationCap, ArrowRight, BarChart3, Loader2, Sparkles, Upload, Brain } from 'lucide-react';
 import { toast } from 'sonner';
+import { MarksMatrix } from '@/components/naac/MarksMatrix';
+import { NaacDocumentAnalysisResult } from '@/lib/services/naacService';
 
 const fadeIn = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } };
 const stagger = { hidden: {}, visible: { transition: { staggerChildren: 0.08 } } };
@@ -21,6 +23,9 @@ export default function NaacPage() {
     const [summary, setSummary] = useState<ComplianceSummary | null>(null);
     const [loading, setLoading] = useState(true);
     const [initializing, setInitializing] = useState(false);
+    const [analyzing, setAnalyzing] = useState(false);
+    const [analysisResult, setAnalysisResult] = useState<NaacDocumentAnalysisResult | null>(null);
+    const fileInputRef = React.useRef<HTMLInputElement>(null);
 
     const fetchData = async () => {
         try {
@@ -54,6 +59,41 @@ export default function NaacPage() {
         }
     };
 
+    const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const files = event.target.files;
+        if (!files || files.length === 0) return;
+
+        if (files.length > 30) {
+            toast.error('You can upload a maximum of 30 files at once.');
+            if (fileInputRef.current) fileInputRef.current.value = '';
+            return;
+        }
+
+        const formData = new FormData();
+        for (let i = 0; i < files.length; i++) {
+            formData.append('files', files[i]);
+        }
+
+        setAnalyzing(true);
+        setAnalysisResult(null);
+        try {
+            const res = await naacService.analyzeDocuments(formData);
+            const d = res.data as unknown as Record<string, unknown>;
+            setAnalysisResult((d.data as NaacDocumentAnalysisResult) || (res.data as NaacDocumentAnalysisResult));
+            toast.success('Analysis completed successfully!');
+            // Scroll to results
+            setTimeout(() => {
+                window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+            }, 100);
+        } catch (error) {
+            console.error('Analysis failed:', error);
+            toast.error('Failed to analyze documents. Please try again.');
+        } finally {
+            setAnalyzing(false);
+            if (fileInputRef.current) fileInputRef.current.value = '';
+        }
+    };
+
     if (loading) {
         return (
             <div className="space-y-6">
@@ -73,11 +113,27 @@ export default function NaacPage() {
                     <p className="text-muted-foreground mt-1">Manage all 7 criteria for NAAC compliance</p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <Button variant="outline">
-                        <Upload className="mr-2 h-4 w-4" />
-                        Upload Files
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        className="hidden"
+                        multiple
+                        accept=".pdf,.docx,.txt"
+                        onChange={handleFileUpload}
+                    />
+                    <Button
+                        variant="outline"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={analyzing}
+                    >
+                        {analyzing ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                            <Upload className="mr-2 h-4 w-4" />
+                        )}
+                        {analyzing ? 'Analyzing...' : 'Upload Files (max 30)'}
                     </Button>
-                    <Button onClick={handleInitialize} disabled={initializing} variant="outline">
+                    <Button onClick={handleInitialize} disabled={initializing || analyzing} variant="outline">
                         {initializing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
                         Initialize Sub-Criteria
                     </Button>
@@ -146,6 +202,9 @@ export default function NaacPage() {
                     );
                 })}
             </motion.div>
+
+            {/* Analysis Results */}
+            {analysisResult && <MarksMatrix result={analysisResult} />}
         </motion.div>
     );
 }
