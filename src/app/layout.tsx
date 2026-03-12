@@ -10,6 +10,7 @@ const inter = Inter({
   variable: '--font-inter',
 });
 
+/* v1.0.1 */
 export const metadata: Metadata = {
   title: 'AccreditAI — Compliance without the chaos.',
   description:
