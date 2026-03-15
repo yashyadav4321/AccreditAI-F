@@ -35,6 +35,9 @@ const aiService = {
 
     getReportById: (id: string) =>
         api.get<AiReport>(`/ai/reports/${id}`),
+
+    deleteReport: (id: string) =>
+        api.delete(`/ai/reports/${id}`),
 };
 
 export default aiService;

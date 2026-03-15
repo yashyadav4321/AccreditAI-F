@@ -1,31 +1,126 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import Link from 'next/link';
-import { motion } from 'framer-motion';
-import naacService, { NaacCriterion, ComplianceSummary } from '@/lib/services/naacService';
+import React, { useEffect, useState, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import naacService, { NaacCriterion, ComplianceSummary, NaacDocumentAnalysisResult } from '@/lib/services/naacService';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { GraduationCap, ArrowRight, BarChart3, Loader2, Sparkles, Upload, Brain } from 'lucide-react';
+import { GraduationCap, BarChart3, Loader2, Sparkles, Upload, Brain, CheckCircle2, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { MarksMatrix } from '@/components/naac/MarksMatrix';
-import { NaacDocumentAnalysisResult } from '@/lib/services/naacService';
 
 const fadeIn = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } };
-const stagger = { hidden: {}, visible: { transition: { staggerChildren: 0.08 } } };
-const COLORS = ['bg-blue-500', 'bg-accent0', 'bg-pink-500', 'bg-amber-500', 'bg-emerald-500', 'bg-cyan-500', 'bg-rose-500'];
+const stagger = { hidden: {}, visible: { transition: { staggerChildren: 0.06 } } };
+
+const CRITERION_COLORS = [
+    'from-blue-500 to-blue-600',
+    'from-violet-500 to-violet-600',
+    'from-pink-500 to-pink-600',
+    'from-amber-500 to-amber-600',
+    'from-emerald-500 to-emerald-600',
+    'from-cyan-500 to-cyan-600',
+    'from-rose-500 to-rose-600',
+];
+
+const CRITERION_LABELS = [
+    { number: 1, title: 'Curricular Aspects', maxMarks: 150 },
+    { number: 2, title: 'Teaching-Learning and Evaluation', maxMarks: 200 },
+    { number: 3, title: 'Research, Innovations and Extension', maxMarks: 150 },
+    { number: 4, title: 'Infrastructure and Learning Resources', maxMarks: 100 },
+    { number: 5, title: 'Student Support and Progression', maxMarks: 100 },
+    { number: 6, title: 'Governance, Leadership and Management', maxMarks: 100 },
+    { number: 7, title: 'Institutional Values and Best Practices', maxMarks: 100 },
+];
+
+// All NAAC sub-criteria mirrored from the AI service
+const ALL_SUB_CRITERIA = [
+    { subNumber: '1.1.1', title: 'Curriculum planning and implementation', maxMarks: 20, criterion: 1 },
+    { subNumber: '1.1.2', title: 'Academic flexibility available', maxMarks: 20, criterion: 1 },
+    { subNumber: '1.2.1', title: 'Programs with CBCS/Elective option', maxMarks: 20, criterion: 1 },
+    { subNumber: '1.2.2', title: 'Value-added courses offered', maxMarks: 20, criterion: 1 },
+    { subNumber: '1.3.1', title: 'Cross-cutting issues in curriculum', maxMarks: 20, criterion: 1 },
+    { subNumber: '1.3.2', title: 'Courses integrating ICT', maxMarks: 10, criterion: 1 },
+    { subNumber: '1.4.1', title: 'Structured feedback on curriculum', maxMarks: 20, criterion: 1 },
+    { subNumber: '1.4.2', title: 'Feedback processes and action taken', maxMarks: 20, criterion: 1 },
+    { subNumber: '2.1.1', title: 'Student enrollment and demand ratio', maxMarks: 20, criterion: 2 },
+    { subNumber: '2.1.2', title: 'Reserved category admissions', maxMarks: 10, criterion: 2 },
+    { subNumber: '2.2.1', title: 'Student-teacher ratio assessment', maxMarks: 20, criterion: 2 },
+    { subNumber: '2.3.1', title: 'Student-centric methods adopted', maxMarks: 20, criterion: 2 },
+    { subNumber: '2.3.2', title: 'ICT-enabled tools for teaching', maxMarks: 10, criterion: 2 },
+    { subNumber: '2.4.1', title: 'Full-time teacher qualifications', maxMarks: 20, criterion: 2 },
+    { subNumber: '2.4.2', title: 'Faculty with PhD percentage', maxMarks: 20, criterion: 2 },
+    { subNumber: '2.5.1', title: 'Evaluation reforms implemented', maxMarks: 20, criterion: 2 },
+    { subNumber: '2.6.1', title: 'Program and course outcomes defined', maxMarks: 20, criterion: 2 },
+    { subNumber: '2.6.2', title: 'Attainment of outcomes measured', maxMarks: 20, criterion: 2 },
+    { subNumber: '2.7.1', title: 'Student satisfaction survey results', maxMarks: 20, criterion: 2 },
+    { subNumber: '3.1.1', title: 'Research grants and funding received', maxMarks: 15, criterion: 3 },
+    { subNumber: '3.1.2', title: 'Teachers recognized as research guides', maxMarks: 10, criterion: 3 },
+    { subNumber: '3.2.1', title: 'Innovation ecosystem and initiatives', maxMarks: 15, criterion: 3 },
+    { subNumber: '3.2.2', title: 'Workshops/seminars on research methodology', maxMarks: 10, criterion: 3 },
+    { subNumber: '3.3.1', title: 'Research papers in indexed journals', maxMarks: 20, criterion: 3 },
+    { subNumber: '3.3.2', title: 'Books and chapters published', maxMarks: 15, criterion: 3 },
+    { subNumber: '3.4.1', title: 'Extension activities conducted', maxMarks: 20, criterion: 3 },
+    { subNumber: '3.4.2', title: 'Awards for extension activities', maxMarks: 15, criterion: 3 },
+    { subNumber: '3.5.1', title: 'Collaborative activities with other institutions', maxMarks: 15, criterion: 3 },
+    { subNumber: '3.5.2', title: 'MoUs and functional linkages', maxMarks: 15, criterion: 3 },
+    { subNumber: '4.1.1', title: 'Physical infrastructure adequacy', maxMarks: 20, criterion: 4 },
+    { subNumber: '4.1.2', title: 'Infrastructure augmentation expenditure', maxMarks: 15, criterion: 4 },
+    { subNumber: '4.2.1', title: 'Library automation and resources', maxMarks: 15, criterion: 4 },
+    { subNumber: '4.2.2', title: 'E-resources subscription and usage', maxMarks: 10, criterion: 4 },
+    { subNumber: '4.3.1', title: 'IT infrastructure and internet bandwidth', maxMarks: 15, criterion: 4 },
+    { subNumber: '4.3.2', title: 'Student-computer ratio', maxMarks: 10, criterion: 4 },
+    { subNumber: '4.4.1', title: 'Infrastructure maintenance expenditure', maxMarks: 10, criterion: 4 },
+    { subNumber: '4.4.2', title: 'Systems for maintenance and utilization', maxMarks: 5, criterion: 4 },
+    { subNumber: '5.1.1', title: 'Scholarships and freeships provided', maxMarks: 15, criterion: 5 },
+    { subNumber: '5.1.2', title: 'Capability enhancement and development schemes', maxMarks: 10, criterion: 5 },
+    { subNumber: '5.1.3', title: 'Career counselling activities', maxMarks: 10, criterion: 5 },
+    { subNumber: '5.2.1', title: 'Student placement statistics', maxMarks: 20, criterion: 5 },
+    { subNumber: '5.2.2', title: 'Students qualifying state/national exams', maxMarks: 10, criterion: 5 },
+    { subNumber: '5.3.1', title: 'Awards and medals in sports/cultural activities', maxMarks: 10, criterion: 5 },
+    { subNumber: '5.3.2', title: 'Student council and representation', maxMarks: 10, criterion: 5 },
+    { subNumber: '5.4.1', title: 'Alumni association activities', maxMarks: 10, criterion: 5 },
+    { subNumber: '5.4.2', title: 'Alumni contribution to development', maxMarks: 5, criterion: 5 },
+    { subNumber: '6.1.1', title: 'Institutional vision and leadership', maxMarks: 15, criterion: 6 },
+    { subNumber: '6.1.2', title: 'Decentralization and participative management', maxMarks: 10, criterion: 6 },
+    { subNumber: '6.2.1', title: 'Strategic plan and deployment', maxMarks: 15, criterion: 6 },
+    { subNumber: '6.2.2', title: 'Institutional organization structure', maxMarks: 10, criterion: 6 },
+    { subNumber: '6.3.1', title: 'Faculty empowerment strategies', maxMarks: 10, criterion: 6 },
+    { subNumber: '6.3.2', title: 'Financial management and resource mobilization', maxMarks: 10, criterion: 6 },
+    { subNumber: '6.4.1', title: 'Institution conducts internal and external audits', maxMarks: 10, criterion: 6 },
+    { subNumber: '6.5.1', title: 'Internal Quality Assurance System', maxMarks: 10, criterion: 6 },
+    { subNumber: '6.5.2', title: 'Quality initiatives by IQAC', maxMarks: 10, criterion: 6 },
+    { subNumber: '7.1.1', title: 'Gender equity measures', maxMarks: 15, criterion: 7 },
+    { subNumber: '7.1.2', title: 'Environmental consciousness and sustainability', maxMarks: 15, criterion: 7 },
+    { subNumber: '7.1.3', title: 'Disabled-friendly and barrier-free environment', maxMarks: 10, criterion: 7 },
+    { subNumber: '7.1.4', title: 'Code of conduct and institutional values', maxMarks: 10, criterion: 7 },
+    { subNumber: '7.2.1', title: 'Best practices implemented', maxMarks: 25, criterion: 7 },
+    { subNumber: '7.3.1', title: 'Institutional distinctiveness', maxMarks: 25, criterion: 7 },
+];
+
+type AnalysisState = {
+    loading: boolean;
+    result: NaacDocumentAnalysisResult | null;
+};
 
 export default function NaacPage() {
     const [criteria, setCriteria] = useState<NaacCriterion[]>([]);
     const [summary, setSummary] = useState<ComplianceSummary | null>(null);
     const [loading, setLoading] = useState(true);
     const [initializing, setInitializing] = useState(false);
-    const [analyzing, setAnalyzing] = useState(false);
-    const [analysisResult, setAnalysisResult] = useState<NaacDocumentAnalysisResult | null>(null);
-    const fileInputRef = React.useRef<HTMLInputElement>(null);
+    const [activeTab, setActiveTab] = useState<'criteria' | 'sub-criteria'>('criteria');
+
+    // Per-criterion analysis state (criteria-wise tab)
+    const [criteriaAnalysis, setCriteriaAnalysis] = useState<Record<number, AnalysisState>>({});
+
+    // Per-sub-criterion analysis state (sub-criteria tab)
+    const [subAnalysis, setSubAnalysis] = useState<Record<string, AnalysisState>>({});
+
+    // Hidden file inputs: one per criterion (1-7) and one per sub-criterion
+    const criteriaFileRefs = useRef<Record<number, HTMLInputElement | null>>({});
+    const subFileRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
     const fetchData = async () => {
         try {
@@ -59,39 +154,53 @@ export default function NaacPage() {
         }
     };
 
-    const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-        const files = event.target.files;
-        if (!files || files.length === 0) return;
-
+    // Criteria-wise upload handler
+    const handleCriteriaUpload = async (criterionNumber: number, files: FileList) => {
         if (files.length > 30) {
-            toast.error('You can upload a maximum of 30 files at once.');
-            if (fileInputRef.current) fileInputRef.current.value = '';
+            toast.error('Maximum 30 files per criterion.');
             return;
         }
-
         const formData = new FormData();
-        for (let i = 0; i < files.length; i++) {
-            formData.append('files', files[i]);
-        }
+        for (let i = 0; i < files.length; i++) formData.append('files', files[i]);
 
-        setAnalyzing(true);
-        setAnalysisResult(null);
+        setCriteriaAnalysis(prev => ({ ...prev, [criterionNumber]: { loading: true, result: null } }));
         try {
-            const res = await naacService.analyzeDocuments(formData);
+            const res = await naacService.analyzeDocuments(formData, { criterionNumber });
             const d = res.data as unknown as Record<string, unknown>;
-            setAnalysisResult((d.data as NaacDocumentAnalysisResult) || (res.data as NaacDocumentAnalysisResult));
-            toast.success('Analysis completed successfully!');
-            // Scroll to results
-            setTimeout(() => {
-                window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-            }, 100);
-        } catch (error) {
-            console.error('Analysis failed:', error);
-            toast.error('Failed to analyze documents. Please try again.');
-        } finally {
-            setAnalyzing(false);
-            if (fileInputRef.current) fileInputRef.current.value = '';
+            const result = (d.data as NaacDocumentAnalysisResult) || (res.data as NaacDocumentAnalysisResult);
+            setCriteriaAnalysis(prev => ({ ...prev, [criterionNumber]: { loading: false, result } }));
+            toast.success(`Criterion ${criterionNumber} analysis complete! Saved automatically.`);
+        } catch {
+            setCriteriaAnalysis(prev => ({ ...prev, [criterionNumber]: { loading: false, result: null } }));
+            toast.error('Analysis failed. Please try again.');
         }
+        // Reset file input
+        const ref = criteriaFileRefs.current[criterionNumber];
+        if (ref) ref.value = '';
+    };
+
+    // Sub-criterion upload handler
+    const handleSubUpload = async (subNumber: string, files: FileList) => {
+        if (files.length > 5) {
+            toast.error('Maximum 5 files per sub-criterion.');
+            return;
+        }
+        const formData = new FormData();
+        for (let i = 0; i < files.length; i++) formData.append('files', files[i]);
+
+        setSubAnalysis(prev => ({ ...prev, [subNumber]: { loading: true, result: null } }));
+        try {
+            const res = await naacService.analyzeDocuments(formData, { subCriterionNumbers: [subNumber] });
+            const d = res.data as unknown as Record<string, unknown>;
+            const result = (d.data as NaacDocumentAnalysisResult) || (res.data as NaacDocumentAnalysisResult);
+            setSubAnalysis(prev => ({ ...prev, [subNumber]: { loading: false, result } }));
+            toast.success(`${subNumber} analysis complete! Saved automatically.`);
+        } catch {
+            setSubAnalysis(prev => ({ ...prev, [subNumber]: { loading: false, result: null } }));
+            toast.error('Analysis failed. Please try again.');
+        }
+        const ref = subFileRefs.current[subNumber];
+        if (ref) ref.value = '';
     };
 
     if (loading) {
@@ -107,40 +216,19 @@ export default function NaacPage() {
 
     return (
         <motion.div initial="hidden" animate="visible" variants={stagger} className="space-y-6">
+            {/* Header */}
             <motion.div variants={fadeIn} className="flex items-center justify-between">
                 <div>
                     <h1 className="text-3xl font-bold">NAAC Accreditation</h1>
-                    <p className="text-muted-foreground mt-1">Manage all 7 criteria for NAAC compliance</p>
+                    <p className="text-muted-foreground mt-1">Upload documents criterion-wise or sub-criterion-wise for AI analysis</p>
                 </div>
-                <div className="flex items-center gap-3">
-                    <input
-                        type="file"
-                        ref={fileInputRef}
-                        className="hidden"
-                        multiple
-                        accept=".pdf,.docx,.txt"
-                        onChange={handleFileUpload}
-                    />
-                    <Button
-                        variant="outline"
-                        onClick={() => fileInputRef.current?.click()}
-                        disabled={analyzing}
-                    >
-                        {analyzing ? (
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        ) : (
-                            <Upload className="mr-2 h-4 w-4" />
-                        )}
-                        {analyzing ? 'Analyzing...' : 'Upload Files (max 30)'}
-                    </Button>
-                    <Button onClick={handleInitialize} disabled={initializing || analyzing} variant="outline">
-                        {initializing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
-                        Initialize Sub-Criteria
-                    </Button>
-                </div>
+                <Button onClick={handleInitialize} disabled={initializing} variant="outline">
+                    {initializing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                    Initialize Sub-Criteria
+                </Button>
             </motion.div>
 
-            {/* Overall Compliance Card */}
+            {/* Overall Compliance */}
             {summary && (
                 <motion.div variants={fadeIn}>
                     <Card className="border-border/50 bg-gradient-to-r from-foreground/5 to-foreground/5">
@@ -163,48 +251,233 @@ export default function NaacPage() {
                 </motion.div>
             )}
 
-            {/* Criteria Cards Grid */}
-            <motion.div variants={stagger} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {(criteria.length > 0 ? criteria : Array.from({ length: 7 }, (_, i) => ({
-                    id: String(i + 1), number: i + 1, name: `Criterion ${i + 1}`,
-                    description: 'NAAC criterion details', weightage: 100, completionPercentage: 0,
-                } as NaacCriterion))).map((criterion, i) => {
-                    // Backend returns criterionNumber/title/complianceScore; fallback to number/name/completionPercentage
-                    const raw = criterion as unknown as Record<string, unknown>;
-                    const cNumber = (raw.criterionNumber as number) || criterion.number || (i + 1);
-                    const cTitle = (raw.title as string) || criterion.name || `Criterion ${i + 1}`;
-                    const cScore = (raw.complianceScore as number) ?? criterion.completionPercentage ?? 0;
-                    return (
-                        <motion.div key={criterion.id} variants={fadeIn}>
-                            <Link href={`/naac/${criterion.id}`}>
-                                <Card className="group hover:shadow-lg hover:border-border transition-all duration-300 cursor-pointer border-border/50 h-full">
-                                    <CardHeader className="pb-3">
-                                        <div className="flex items-center justify-between">
-                                            <Badge className={`${COLORS[i % 7]} text-white border-0`}>
-                                                Criterion {cNumber}
-                                            </Badge>
-                                            <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
-                                        </div>
-                                        <CardTitle className="text-lg mt-2">{cTitle}</CardTitle>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <div className="space-y-2">
-                                            <div className="flex items-center justify-between text-sm">
-                                                <span className="text-muted-foreground">Progress</span>
-                                                <span className="font-medium">{cScore.toFixed?.(0) || 0}%</span>
-                                            </div>
-                                            <Progress value={cScore} className="h-2" />
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            </Link>
-                        </motion.div>
-                    );
-                })}
+            {/* Tab Toggle */}
+            <motion.div variants={fadeIn}>
+                <div className="flex gap-1 p-1 bg-muted rounded-xl w-fit">
+                    <button
+                        onClick={() => setActiveTab('criteria')}
+                        className={`px-5 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${activeTab === 'criteria'
+                            ? 'bg-background text-foreground shadow-sm'
+                            : 'text-muted-foreground hover:text-foreground'
+                            }`}
+                    >
+                        <Upload className="inline h-4 w-4 mr-2" />
+                        Criteria-wise Upload
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('sub-criteria')}
+                        className={`px-5 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${activeTab === 'sub-criteria'
+                            ? 'bg-background text-foreground shadow-sm'
+                            : 'text-muted-foreground hover:text-foreground'
+                            }`}
+                    >
+                        <Brain className="inline h-4 w-4 mr-2" />
+                        Sub-Criteria-wise Upload
+                    </button>
+                </div>
             </motion.div>
 
-            {/* Analysis Results */}
-            {analysisResult && <MarksMatrix result={analysisResult} />}
+            {/* ── Criteria-wise Tab ── */}
+            <AnimatePresence mode="wait">
+                {activeTab === 'criteria' && (
+                    <motion.div
+                        key="criteria"
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -8 }}
+                        className="space-y-4"
+                    >
+                        <p className="text-sm text-muted-foreground">
+                            Upload up to <strong>30 files</strong> per criterion. The AI will analyse only that criterion's sub-criteria.
+                        </p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                            {CRITERION_LABELS.map((c, i) => {
+                                const state = criteriaAnalysis[c.number];
+                                const isLoading = state?.loading;
+                                const result = state?.result;
+
+                                return (
+                                    <div key={c.number} className="space-y-3">
+                                        {/* Criterion Upload Card */}
+                                        <Card className="border-border/50 hover:border-border transition-colors">
+                                            <CardContent className="p-5">
+                                                <div className="flex items-start justify-between gap-3 mb-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className={`h-10 w-10 rounded-lg bg-gradient-to-br ${CRITERION_COLORS[i]} flex items-center justify-center text-white font-bold text-sm shrink-0`}>
+                                                            {c.number}
+                                                        </div>
+                                                        <div>
+                                                            <p className="font-semibold text-sm leading-tight">{c.title}</p>
+                                                            <p className="text-xs text-muted-foreground mt-0.5">Max {c.maxMarks} marks</p>
+                                                        </div>
+                                                    </div>
+                                                    {result && (
+                                                        <button
+                                                            onClick={() => setCriteriaAnalysis(prev => { const n = { ...prev }; delete n[c.number]; return n; })}
+                                                            className="text-muted-foreground hover:text-foreground transition-colors shrink-0"
+                                                        >
+                                                            <X className="h-4 w-4" />
+                                                        </button>
+                                                    )}
+                                                </div>
+
+                                                {result ? (
+                                                    <div className="flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400">
+                                                        <CheckCircle2 className="h-4 w-4" />
+                                                        <span className="font-medium">
+                                                            Score: {result.overallEstimatedScore} / {result.maxPossibleScore}
+                                                        </span>
+                                                    </div>
+                                                ) : (
+                                                    <>
+                                                        {/* Hidden file input */}
+                                                        <input
+                                                            type="file"
+                                                            multiple
+                                                            accept=".pdf,.docx,.doc,.txt"
+                                                            className="hidden"
+                                                            ref={el => { criteriaFileRefs.current[c.number] = el; }}
+                                                            onChange={e => {
+                                                                if (e.target.files?.length) handleCriteriaUpload(c.number, e.target.files);
+                                                            }}
+                                                        />
+                                                        <Button
+                                                            size="sm"
+                                                            variant="outline"
+                                                            className="w-full"
+                                                            disabled={isLoading}
+                                                            onClick={() => criteriaFileRefs.current[c.number]?.click()}
+                                                        >
+                                                            {isLoading ? (
+                                                                <><Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />Analysing...</>
+                                                            ) : (
+                                                                <><Upload className="mr-2 h-3.5 w-3.5" />Upload &amp; Analyse (max 30)</>
+                                                            )}
+                                                        </Button>
+                                                    </>
+                                                )}
+                                            </CardContent>
+                                        </Card>
+
+                                        {/* Inline results */}
+                                        {result && <MarksMatrix result={result} />}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </motion.div>
+                )}
+
+                {/* ── Sub-Criteria-wise Tab ── */}
+                {activeTab === 'sub-criteria' && (
+                    <motion.div
+                        key="sub-criteria"
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -8 }}
+                        className="space-y-6"
+                    >
+                        <p className="text-sm text-muted-foreground">
+                            Upload up to <strong>5 files</strong> per sub-criterion. The AI will analyse only that specific sub-criterion.
+                        </p>
+                        {CRITERION_LABELS.map((c, ci) => {
+                            const subCriteria = ALL_SUB_CRITERIA.filter(s => s.criterion === c.number);
+                            return (
+                                <div key={c.number}>
+                                    {/* Criterion header */}
+                                    <div className="flex items-center gap-3 mb-3">
+                                        <div className={`h-8 w-8 rounded-lg bg-gradient-to-br ${CRITERION_COLORS[ci]} flex items-center justify-center text-white font-bold text-sm`}>
+                                            {c.number}
+                                        </div>
+                                        <div>
+                                            <p className="font-semibold">{c.title}</p>
+                                            <p className="text-xs text-muted-foreground">{subCriteria.length} sub-criteria · Max {c.maxMarks} marks</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pl-11">
+                                        {subCriteria.map(sc => {
+                                            const state = subAnalysis[sc.subNumber];
+                                            const isLoading = state?.loading;
+                                            const result = state?.result;
+
+                                            return (
+                                                <div key={sc.subNumber} className="space-y-2">
+                                                    <Card className="border-border/50">
+                                                        <CardContent className="p-4">
+                                                            <div className="flex items-start justify-between gap-2 mb-3">
+                                                                <div className="flex-1 min-w-0">
+                                                                    <div className="flex items-center gap-2 mb-1">
+                                                                        <span className="text-xs font-mono font-bold bg-muted px-1.5 py-0.5 rounded shrink-0">
+                                                                            {sc.subNumber}
+                                                                        </span>
+                                                                        <Badge variant="outline" className="text-[10px] shrink-0">
+                                                                            max {sc.maxMarks}
+                                                                        </Badge>
+                                                                    </div>
+                                                                    <p className="text-sm font-medium leading-snug">{sc.title}</p>
+                                                                </div>
+                                                                {result && (
+                                                                    <button
+                                                                        onClick={() => setSubAnalysis(prev => { const n = { ...prev }; delete n[sc.subNumber]; return n; })}
+                                                                        className="text-muted-foreground hover:text-foreground transition-colors shrink-0"
+                                                                    >
+                                                                        <X className="h-3.5 w-3.5" />
+                                                                    </button>
+                                                                )}
+                                                            </div>
+
+                                                            {result ? (
+                                                                <div className="flex items-center gap-2 text-xs text-emerald-600 dark:text-emerald-400">
+                                                                    <CheckCircle2 className="h-3.5 w-3.5" />
+                                                                    <span className="font-medium">
+                                                                        Score: {result.overallEstimatedScore} / {result.maxPossibleScore} — saved
+                                                                    </span>
+                                                                </div>
+                                                            ) : (
+                                                                <>
+                                                                    <input
+                                                                        type="file"
+                                                                        multiple
+                                                                        accept=".pdf,.docx,.doc,.txt"
+                                                                        className="hidden"
+                                                                        ref={el => { subFileRefs.current[sc.subNumber] = el; }}
+                                                                        onChange={e => {
+                                                                            if (e.target.files?.length) handleSubUpload(sc.subNumber, e.target.files);
+                                                                        }}
+                                                                    />
+                                                                    <Button
+                                                                        size="sm"
+                                                                        variant="outline"
+                                                                        className="w-full h-8 text-xs"
+                                                                        disabled={isLoading}
+                                                                        onClick={() => subFileRefs.current[sc.subNumber]?.click()}
+                                                                    >
+                                                                        {isLoading ? (
+                                                                            <><Loader2 className="mr-1.5 h-3 w-3 animate-spin" />Analysing...</>
+                                                                        ) : (
+                                                                            <><Upload className="mr-1.5 h-3 w-3" />Upload (max 5)</>
+                                                                        )}
+                                                                    </Button>
+                                                                </>
+                                                            )}
+                                                        </CardContent>
+                                                    </Card>
+                                                    {result && <MarksMatrix result={result} />}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+
+                                    {ci < CRITERION_LABELS.length - 1 && (
+                                        <div className="border-t border-border/30 mt-6" />
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </motion.div>
     );
 }

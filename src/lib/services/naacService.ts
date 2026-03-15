@@ -120,11 +120,18 @@ const naacService = {
     initSubCriteria: () =>
         api.post('/naac/init-sub-criteria'),
 
-    analyzeDocuments: (formData: FormData) =>
-        api.post<NaacDocumentAnalysisResult>('/naac/analyze-documents', formData, {
+    analyzeDocuments: (formData: FormData, scope?: { criterionNumber?: number; subCriterionNumbers?: string[] }) => {
+        if (scope?.criterionNumber) {
+            formData.append('criterionNumber', String(scope.criterionNumber));
+        }
+        if (scope?.subCriterionNumbers?.length) {
+            formData.append('subCriterionNumbers', scope.subCriterionNumbers.join(','));
+        }
+        return api.post<NaacDocumentAnalysisResult>('/naac/analyze-documents', formData, {
             headers: { 'Content-Type': 'multipart/form-data' },
             timeout: 180000,
-        }),
+        });
+    },
 
     analyzeDocumentsOnly: (formData: FormData) =>
         api.post<NaacDocumentAnalysisResult>('/naac/analyze-documents-only', formData, {
@@ -139,26 +146,6 @@ const naacService = {
 
     confirmAnalysis: (analysisResult: NaacAnalysisResultUnion) =>
         api.post('/naac/confirm-analysis', { analysisResult }),
-
-    createDraft: (data: { criterionId: string; name: string; documents: any[]; analysisResult?: any }) =>
-        api.post('/naac/drafts', data),
-
-    getDrafts: (criterionId: string) =>
-        api.get<NaacDraft[]>(`/naac/drafts/${criterionId}`),
-
-    deleteDraft: (id: string) =>
-        api.delete(`/naac/drafts/${id}`),
 };
-
-export interface NaacDraft {
-    id: string;
-    collegeId: string;
-    criterionId: string;
-    name: string;
-    documents: { fileName: string; fileUrl: string; fileSize?: number; fileType?: string }[];
-    analysisResult?: any;
-    createdAt: string;
-    updatedAt: string;
-}
 
 export default naacService;

@@ -1,29 +1,12 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import {
-    Brain,
-    CheckCircle2,
-    AlertCircle,
-    HelpCircle,
-    TrendingUp,
-    FileCheck,
-    BarChart3,
-    ChevronDown,
-    ChevronUp,
-    ClipboardCheck,
-    ShieldCheck,
-    XCircle,
+    Brain, CheckCircle2, AlertCircle, HelpCircle, TrendingUp,
+    FileCheck, BarChart3, ChevronDown, ChevronUp,
+    ShieldCheck, XCircle, Clock,
 } from 'lucide-react';
 import { NaacDocumentAnalysisResult, NaacSubCriterionScore } from '@/lib/services/naacService';
 
@@ -32,253 +15,197 @@ interface MarksMatrixProps {
 }
 
 const CONFIDENCE_CONFIG = {
-    HIGH: {
-        icon: <CheckCircle2 className="h-4 w-4 text-emerald-500" />,
-        color: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20',
-        label: 'High Confidence'
-    },
-    MEDIUM: {
-        icon: <AlertCircle className="h-4 w-4 text-amber-500" />,
-        color: 'bg-amber-500/10 text-amber-500 border-amber-500/20',
-        label: 'Medium Confidence'
-    },
-    LOW: {
-        icon: <HelpCircle className="h-4 w-4 text-slate-400" />,
-        color: 'bg-slate-500/10 text-slate-500 border-slate-500/20',
-        label: 'Low Confidence'
-    }
+    HIGH: { icon: <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />, color: 'text-emerald-500', label: 'High' },
+    MEDIUM: { icon: <AlertCircle className="h-3.5 w-3.5 text-amber-500" />, color: 'text-amber-500', label: 'Med' },
+    LOW: { icon: <HelpCircle className="h-3.5 w-3.5 text-muted-foreground" />, color: 'text-muted-foreground', label: 'Low' },
 };
 
 const STATUS_CONFIG = {
-    COMPLETE: {
-        icon: <ShieldCheck className="h-4 w-4" />,
-        color: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
-        label: 'Complete',
-    },
-    PARTIAL: {
-        icon: <AlertCircle className="h-4 w-4" />,
-        color: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
-        label: 'Partial',
-    },
-    INCOMPLETE: {
-        icon: <XCircle className="h-4 w-4" />,
-        color: 'bg-red-500/15 text-red-400 border-red-500/30',
-        label: 'Incomplete',
-    },
+    COMPLETE: { icon: <ShieldCheck className="h-3.5 w-3.5" />, color: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30', label: 'Complete' },
+    PARTIAL: { icon: <Clock className="h-3.5 w-3.5" />, color: 'bg-amber-500/15 text-amber-400 border-amber-500/30', label: 'Partial' },
+    INCOMPLETE: { icon: <XCircle className="h-3.5 w-3.5" />, color: 'bg-red-500/15 text-red-400 border-red-500/30', label: 'Incomplete' },
 };
 
+function ScoreBar({ score, max }: { score: number; max: number }) {
+    const pct = max > 0 ? Math.round((score / max) * 100) : 0;
+    const color = pct >= 70 ? 'bg-emerald-500' : pct >= 40 ? 'bg-amber-500' : 'bg-red-500';
+    return (
+        <div className="flex items-center gap-2 w-full">
+            <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+                <div className={`h-full rounded-full transition-all duration-500 ${color}`} style={{ width: `${pct}%` }} />
+            </div>
+            <span className={`text-xs font-bold tabular-nums shrink-0 ${pct >= 70 ? 'text-emerald-500' : pct >= 40 ? 'text-amber-500' : 'text-red-500'}`}>
+                {score}/{max}
+            </span>
+        </div>
+    );
+}
+
 export function MarksMatrix({ result }: MarksMatrixProps) {
-    const overallPercentage = (result.overallEstimatedScore / result.maxPossibleScore) * 100;
-    const [expandedRow, setExpandedRow] = useState<number | null>(null);
+    const overallPct = result.maxPossibleScore > 0
+        ? Math.round((result.overallEstimatedScore / result.maxPossibleScore) * 100)
+        : 0;
+    const [expandedIdx, setExpandedIdx] = useState<number | null>(null);
 
     const completeCount = result.subCriteriaScores.filter(s => s.status === 'COMPLETE').length;
     const partialCount = result.subCriteriaScores.filter(s => s.status === 'PARTIAL').length;
     const incompleteCount = result.subCriteriaScores.filter(s => s.status === 'INCOMPLETE').length;
 
+    const overallColor = overallPct >= 70 ? 'text-emerald-400' : overallPct >= 40 ? 'text-amber-400' : 'text-red-400';
+    const barColor = overallPct >= 70 ? '[&>div]:bg-emerald-500' : overallPct >= 40 ? '[&>div]:bg-amber-500' : '[&>div]:bg-red-500';
+
     return (
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="space-y-6 mt-8"
-        >
-            <div className="flex items-center gap-2">
-                <Brain className="h-6 w-6 text-primary" />
-                <h2 className="text-2xl font-bold">Analysis Results: Estimated Marks</h2>
-            </div>
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="space-y-4 mt-2">
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Overall Readiness Summary */}
-                <Card className="md:col-span-2 border-border/50 bg-gradient-to-br from-background to-muted/30">
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-lg flex items-center gap-2">
-                            <TrendingUp className="h-5 w-5 text-primary" />
-                            Overall Readiness Summary
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <p className="text-sm leading-relaxed mb-4">{result.summary}</p>
-                        <div className="space-y-4">
-                            <div className="flex items-center justify-between">
-                                <span className="text-sm font-medium">Estimated Score</span>
-                                <span className="text-2xl font-bold text-primary">
-                                    {result.overallEstimatedScore.toFixed(1)} / {result.maxPossibleScore}
-                                </span>
-                            </div>
-                            <Progress value={overallPercentage} className="h-3" />
-                            <div className="flex justify-between text-xs text-muted-foreground">
-                                <span>0</span>
-                                <span>{overallPercentage.toFixed(1)}% Compliance</span>
-                                <span>{result.maxPossibleScore}</span>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                {/* Stats Card */}
-                <Card className="border-border/50 bg-primary/5">
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-lg flex items-center gap-2">
-                            <BarChart3 className="h-5 w-5 text-primary" />
-                            Stats
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3 pt-4">
-                        <div className="flex justify-between items-center py-2 border-b border-border/50">
-                            <span className="text-sm text-muted-foreground">Analyzed Elements</span>
-                            <span className="font-semibold">{result.subCriteriaScores.length}</span>
-                        </div>
-                        <div className="flex justify-between items-center py-2 border-b border-border/50">
-                            <div className="flex items-center gap-2">
-                                <div className="h-2 w-2 rounded-full bg-emerald-500" />
-                                <span className="text-sm text-muted-foreground">Complete</span>
-                            </div>
-                            <span className="font-semibold text-emerald-400">{completeCount}</span>
-                        </div>
-                        <div className="flex justify-between items-center py-2 border-b border-border/50">
-                            <div className="flex items-center gap-2">
-                                <div className="h-2 w-2 rounded-full bg-amber-500" />
-                                <span className="text-sm text-muted-foreground">Partial</span>
-                            </div>
-                            <span className="font-semibold text-amber-400">{partialCount}</span>
-                        </div>
-                        <div className="flex justify-between items-center py-2 border-b border-border/50">
-                            <div className="flex items-center gap-2">
-                                <div className="h-2 w-2 rounded-full bg-red-500" />
-                                <span className="text-sm text-muted-foreground">Incomplete</span>
-                            </div>
-                            <span className="font-semibold text-red-400">{incompleteCount}</span>
-                        </div>
-                        <div className="flex justify-between items-center py-2">
-                            <span className="text-sm text-muted-foreground">Processing Time</span>
-                            <span className="font-semibold">{result.processingTime}ms</span>
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
-
-            {/* Checklist Source Card */}
-            {result.checklistUsed && (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}>
-                    <Card className="border-border/50 bg-gradient-to-r from-primary/5 to-primary/10">
-                        <CardContent className="p-5 flex items-start gap-4">
-                            <div className="h-10 w-10 rounded-lg bg-primary/15 flex items-center justify-center shrink-0 mt-0.5">
-                                <ClipboardCheck className="h-5 w-5 text-primary" />
+            {/* ── Hero Score Card ── */}
+            <Card className="border-border/50 overflow-hidden">
+                <div className="p-5">
+                    {/* Top row */}
+                    <div className="flex items-start justify-between gap-4 mb-5">
+                        <div className="flex items-center gap-3">
+                            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center shrink-0">
+                                <Brain className="h-5 w-5 text-white" />
                             </div>
                             <div>
-                                <p className="font-semibold text-sm mb-1">Checklist Source Used for Analysis</p>
-                                <p className="text-sm text-muted-foreground leading-relaxed">{result.checklistUsed}</p>
+                                <p className="font-semibold text-sm">AI Analysis Results</p>
+                                <p className="text-xs text-muted-foreground">{result.subCriteriaScores.length} sub-criteria evaluated</p>
                             </div>
-                        </CardContent>
-                    </Card>
-                </motion.div>
-            )}
-
-            {/* Detailed Marks Table */}
-            <Card className="border-border/50 shadow-sm overflow-hidden">
-                <CardHeader className="bg-muted/30 pb-4">
-                    <CardTitle>Detailed Marks Matrix</CardTitle>
-                    <CardDescription>
-                        Per-criterion marks estimation with status, checklist items, and confidence levels.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent className="p-0">
-                    <div className="overflow-x-auto">
-                        <Table>
-                            <TableHeader>
-                                <TableRow className="bg-background hover:bg-background">
-                                    <TableHead className="w-[90px]">ID</TableHead>
-                                    <TableHead className="min-w-[180px]">Sub-Criterion</TableHead>
-                                    <TableHead className="text-center">Marks</TableHead>
-                                    <TableHead className="text-center">Status</TableHead>
-                                    <TableHead className="text-center">Confidence</TableHead>
-                                    <TableHead className="min-w-[280px]">AI Justification</TableHead>
-                                    <TableHead className="w-[50px] text-center">Checklist</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {result.subCriteriaScores.map((score: NaacSubCriterionScore, index: number) => {
-                                    const conf = CONFIDENCE_CONFIG[score.confidence] || CONFIDENCE_CONFIG.LOW;
-                                    const stat = STATUS_CONFIG[score.status] || STATUS_CONFIG.INCOMPLETE;
-                                    const isExpanded = expandedRow === index;
-
-                                    return (
-                                        <React.Fragment key={index}>
-                                            <TableRow className="hover:bg-muted/20 transition-colors">
-                                                <TableCell className="font-mono text-xs font-bold">{score.subNumber}</TableCell>
-                                                <TableCell className="font-medium text-sm">{score.title}</TableCell>
-                                                <TableCell className="text-center">
-                                                    <Badge variant="outline" className="font-bold border-primary/30">
-                                                        {score.estimatedMarks} / {score.maxMarks}
-                                                    </Badge>
-                                                </TableCell>
-                                                <TableCell className="text-center">
-                                                    <Badge variant="outline" className={`${stat.color} gap-1`}>
-                                                        {stat.icon}
-                                                        {stat.label}
-                                                    </Badge>
-                                                </TableCell>
-                                                <TableCell className="text-center">
-                                                    <div className="flex flex-col items-center gap-1">
-                                                        {conf.icon}
-                                                        <span className="text-[10px] font-medium uppercase tracking-wider">{score.confidence}</span>
-                                                    </div>
-                                                </TableCell>
-                                                <TableCell className="text-sm text-muted-foreground leading-relaxed italic">
-                                                    &quot;{score.justification}&quot;
-                                                </TableCell>
-                                                <TableCell className="text-center">
-                                                    {score.checklistItems && score.checklistItems.length > 0 && (
-                                                        <button
-                                                            onClick={() => setExpandedRow(isExpanded ? null : index)}
-                                                            className="p-1 rounded hover:bg-muted/50 transition-colors text-muted-foreground hover:text-foreground"
-                                                            title="View checklist items"
-                                                        >
-                                                            {isExpanded ? (
-                                                                <ChevronUp className="h-4 w-4" />
-                                                            ) : (
-                                                                <ChevronDown className="h-4 w-4" />
-                                                            )}
-                                                        </button>
-                                                    )}
-                                                </TableCell>
-                                            </TableRow>
-                                            <AnimatePresence>
-                                                {isExpanded && score.checklistItems && score.checklistItems.length > 0 && (
-                                                    <TableRow>
-                                                        <TableCell colSpan={7} className="bg-muted/10 py-0 px-0">
-                                                            <motion.div
-                                                                initial={{ height: 0, opacity: 0 }}
-                                                                animate={{ height: 'auto', opacity: 1 }}
-                                                                exit={{ height: 0, opacity: 0 }}
-                                                                transition={{ duration: 0.2 }}
-                                                                className="overflow-hidden"
-                                                            >
-                                                                <div className="p-4 pl-12">
-                                                                    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 flex items-center gap-1.5">
-                                                                        <FileCheck className="h-3.5 w-3.5" />
-                                                                        NAAC Checklist Items Evaluated
-                                                                    </p>
-                                                                    <ul className="space-y-1">
-                                                                        {score.checklistItems.map((item: string, ci: number) => (
-                                                                            <li key={ci} className="text-sm text-muted-foreground flex items-start gap-2">
-                                                                                <CheckCircle2 className="h-3.5 w-3.5 mt-0.5 text-primary/70 shrink-0" />
-                                                                                {item}
-                                                                            </li>
-                                                                        ))}
-                                                                    </ul>
-                                                                </div>
-                                                            </motion.div>
-                                                        </TableCell>
-                                                    </TableRow>
-                                                )}
-                                            </AnimatePresence>
-                                        </React.Fragment>
-                                    );
-                                })}
-                            </TableBody>
-                        </Table>
+                        </div>
+                        <div className="text-right shrink-0">
+                            <p className={`text-3xl font-bold tabular-nums ${overallColor}`}>
+                                {result.overallEstimatedScore.toFixed(0)}
+                                <span className="text-base text-muted-foreground font-normal">/{result.maxPossibleScore}</span>
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-0.5">{overallPct}% compliance</p>
+                        </div>
                     </div>
-                </CardContent>
+
+                    {/* Progress bar */}
+                    <Progress value={overallPct} className={`h-2.5 rounded-full mb-4 ${barColor}`} />
+
+                    {/* Stat pills */}
+                    <div className="flex items-center gap-2 flex-wrap">
+                        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-medium">
+                            <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                            {completeCount} Complete
+                        </div>
+                        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-400 text-xs font-medium">
+                            <div className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                            {partialCount} Partial
+                        </div>
+                        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-500/10 text-red-400 text-xs font-medium">
+                            <div className="h-1.5 w-1.5 rounded-full bg-red-500" />
+                            {incompleteCount} Incomplete
+                        </div>
+                        {result.processingTime && (
+                            <div className="ml-auto text-xs text-muted-foreground tabular-nums">
+                                {(result.processingTime / 1000).toFixed(1)}s
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Summary */}
+                    {result.summary && (
+                        <p className="text-sm text-muted-foreground leading-relaxed mt-4 pt-4 border-t border-border/50">
+                            {result.summary}
+                        </p>
+                    )}
+                </div>
+            </Card>
+
+            {/* ── Sub-criteria rows ── */}
+            <Card className="border-border/50 overflow-hidden">
+                <CardHeader className="pb-3 px-5 pt-4">
+                    <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                        <BarChart3 className="h-4 w-4 text-muted-foreground" />
+                        Detailed Marks
+                    </CardTitle>
+                </CardHeader>
+                <div className="divide-y divide-border/50">
+                    {result.subCriteriaScores.map((score: NaacSubCriterionScore, idx: number) => {
+                        const conf = CONFIDENCE_CONFIG[score.confidence] ?? CONFIDENCE_CONFIG.LOW;
+                        const stat = STATUS_CONFIG[score.status] ?? STATUS_CONFIG.INCOMPLETE;
+                        const isOpen = expandedIdx === idx;
+                        const hasChecklist = score.checklistItems?.length > 0;
+
+                        return (
+                            <div key={idx}>
+                                {/* Main row */}
+                                <button
+                                    onClick={() => setExpandedIdx(isOpen ? null : idx)}
+                                    className="w-full text-left px-5 py-3.5 hover:bg-muted/30 transition-colors"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        {/* ID */}
+                                        <span className="text-xs font-mono font-bold text-muted-foreground bg-muted px-1.5 py-0.5 rounded shrink-0 w-12 text-center">
+                                            {score.subNumber}
+                                        </span>
+
+                                        {/* Title + score bar */}
+                                        <div className="flex-1 min-w-0 space-y-1.5">
+                                            <p className="text-sm font-medium leading-tight truncate">{score.title}</p>
+                                            <ScoreBar score={score.estimatedMarks} max={score.maxMarks} />
+                                        </div>
+
+                                        {/* Status + confidence + chevron */}
+                                        <div className="flex items-center gap-2 shrink-0">
+                                            <Badge variant="outline" className={`${stat.color} gap-1 text-[10px] hidden sm:flex`}>
+                                                {stat.icon}
+                                                {stat.label}
+                                            </Badge>
+                                            <div className="flex items-center gap-1">
+                                                {conf.icon}
+                                                {hasChecklist && (
+                                                    isOpen
+                                                        ? <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" />
+                                                        : <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </button>
+
+                                {/* Expanded — justification + checklist */}
+                                <AnimatePresence>
+                                    {isOpen && (
+                                        <motion.div
+                                            initial={{ height: 0, opacity: 0 }}
+                                            animate={{ height: 'auto', opacity: 1 }}
+                                            exit={{ height: 0, opacity: 0 }}
+                                            transition={{ duration: 0.18 }}
+                                            className="overflow-hidden"
+                                        >
+                                            <div className="px-5 pb-4 pt-2 bg-muted/20 space-y-3">
+                                                {/* Justification */}
+                                                <p className="text-sm text-muted-foreground italic leading-relaxed">
+                                                    &ldquo;{score.justification}&rdquo;
+                                                </p>
+
+                                                {/* Checklist items */}
+                                                {hasChecklist && (
+                                                    <div>
+                                                        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2 flex items-center gap-1.5">
+                                                            <FileCheck className="h-3 w-3" />
+                                                            Checklist evaluated
+                                                        </p>
+                                                        <ul className="space-y-1">
+                                                            {score.checklistItems.map((item: string, ci: number) => (
+                                                                <li key={ci} className="text-xs text-muted-foreground flex items-start gap-2">
+                                                                    <CheckCircle2 className="h-3 w-3 mt-0.5 text-muted-foreground/60 shrink-0" />
+                                                                    {item}
+                                                                </li>
+                                                            ))}
+                                                        </ul>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </div>
+                        );
+                    })}
+                </div>
             </Card>
         </motion.div>
     );
