@@ -50,6 +50,9 @@ const authService = {
     forgotPassword: (data: { email: string }) =>
         api.post('/auth/forgot-password', data),
 
+    verifyResetOtp: (data: { email: string; otp: string }) =>
+        api.post('/auth/verify-reset-otp', data),
+
     resetPassword: (data: { email: string; otp: string; newPassword: string }) =>
         api.post('/auth/reset-password', data),
 
