@@ -50,6 +50,7 @@ export interface NaacSubCriterionScore {
     status: 'COMPLETE' | 'PARTIAL' | 'INCOMPLETE';
     justification: string;
     checklistItems: string[];
+    recommendations?: string[];
 }
 
 export interface CriterionScoreSummary {
@@ -129,19 +130,19 @@ const naacService = {
         }
         return api.post<NaacDocumentAnalysisResult>('/naac/analyze-documents', formData, {
             headers: { 'Content-Type': 'multipart/form-data' },
-            timeout: 180000,
+            timeout: 600000,
         });
     },
 
     analyzeDocumentsOnly: (formData: FormData) =>
         api.post<NaacDocumentAnalysisResult>('/naac/analyze-documents-only', formData, {
             headers: { 'Content-Type': 'multipart/form-data' },
-            timeout: 180000,
+            timeout: 600000,
         }),
 
     analyzeOnly: (criterionId?: string) =>
         api.post<NaacGapAnalysisResult>('/naac/analyze-only', { criterionId }, {
-            timeout: 180000,
+            timeout: 600000,
         }),
 
     confirmAnalysis: (analysisResult: NaacAnalysisResultUnion) =>

@@ -170,7 +170,8 @@ export default function NaacPage() {
             const result = (d.data as NaacDocumentAnalysisResult) || (res.data as NaacDocumentAnalysisResult);
             setCriteriaAnalysis(prev => ({ ...prev, [criterionNumber]: { loading: false, result } }));
             toast.success(`Criterion ${criterionNumber} analysis complete! Saved automatically.`);
-        } catch {
+        } catch (error) {
+            console.error('[handleCriteriaUpload] Analysis failed:', error);
             setCriteriaAnalysis(prev => ({ ...prev, [criterionNumber]: { loading: false, result: null } }));
             toast.error('Analysis failed. Please try again.');
         }
@@ -195,7 +196,8 @@ export default function NaacPage() {
             const result = (d.data as NaacDocumentAnalysisResult) || (res.data as NaacDocumentAnalysisResult);
             setSubAnalysis(prev => ({ ...prev, [subNumber]: { loading: false, result } }));
             toast.success(`${subNumber} analysis complete! Saved automatically.`);
-        } catch {
+        } catch (error) {
+            console.error('[handleSubUpload] Analysis failed:', error);
             setSubAnalysis(prev => ({ ...prev, [subNumber]: { loading: false, result: null } }));
             toast.error('Analysis failed. Please try again.');
         }

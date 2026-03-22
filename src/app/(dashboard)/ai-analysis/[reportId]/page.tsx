@@ -12,7 +12,7 @@ import { Progress } from '@/components/ui/progress';
 import {
     Brain, AlertTriangle, CheckCircle2, TrendingUp, FileText,
     ChevronDown, ChevronRight, BookOpen, Shield, CircleDot,
-    Award, BarChart3, Info,
+    Award, BarChart3, Info, Lightbulb,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
@@ -29,6 +29,7 @@ interface SubCriterionScore {
     status: 'COMPLETE' | 'PARTIAL' | 'INCOMPLETE';
     justification: string;
     checklistItems: string[];
+    recommendations?: string[];
 }
 
 interface CriterionScore {
@@ -220,6 +221,28 @@ function SubCriterionCard({ sub }: { sub: SubCriterionScore }) {
                             </li>
                         ))}
                     </ul>
+                </div>
+            )}
+
+            {/* Recommendations: only for COMPLETE sub-criteria with remaining marks */}
+            {sub.status === 'COMPLETE' &&
+                sub.estimatedMarks < sub.maxMarks &&
+                sub.recommendations && sub.recommendations.length > 0 && (
+                <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3">
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-emerald-500 mb-2 flex items-center gap-1.5">
+                        <Lightbulb className="h-3 w-3" />
+                        To earn remaining {sub.maxMarks - sub.estimatedMarks} marks
+                    </p>
+                    <ol className="space-y-2 list-none">
+                        {sub.recommendations.map((rec, ri) => (
+                            <li key={ri} className="text-xs text-emerald-700 dark:text-emerald-300 flex items-start gap-2">
+                                <span className="h-4 w-4 rounded-full bg-emerald-500/20 text-emerald-500 flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">
+                                    {ri + 1}
+                                </span>
+                                {rec}
+                            </li>
+                        ))}
+                    </ol>
                 </div>
             )}
         </div>

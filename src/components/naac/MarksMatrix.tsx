@@ -6,9 +6,10 @@ import { Progress } from '@/components/ui/progress';
 import {
     Brain, CheckCircle2, AlertCircle, HelpCircle, TrendingUp,
     FileCheck, BarChart3, ChevronDown, ChevronUp,
-    ShieldCheck, XCircle, Clock,
+    ShieldCheck, XCircle, Clock, Lightbulb,
 } from 'lucide-react';
 import { NaacDocumentAnalysisResult, NaacSubCriterionScore } from '@/lib/services/naacService';
+
 
 interface MarksMatrixProps {
     result: NaacDocumentAnalysisResult;
@@ -196,6 +197,32 @@ export function MarksMatrix({ result }: MarksMatrixProps) {
                                                                 </li>
                                                             ))}
                                                         </ul>
+                                                    </div>
+                                                )}
+
+                                                {/* Improvements — show for every sub-criterion with remaining marks */}
+                                                {score.estimatedMarks < score.maxMarks && (
+                                                    <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3">
+                                                        <p className="text-xs font-semibold text-amber-400 mb-2 flex items-center gap-1.5">
+                                                            <Lightbulb className="h-3.5 w-3.5" />
+                                                            Improvements — {score.maxMarks - score.estimatedMarks} marks remaining
+                                                        </p>
+                                                        {score.recommendations && score.recommendations.length > 0 ? (
+                                                            <ol className="space-y-1.5 list-none">
+                                                                {score.recommendations.map((rec: string, ri: number) => (
+                                                                    <li key={ri} className="text-xs text-amber-700 dark:text-amber-200 flex items-start gap-2">
+                                                                        <span className="h-4 w-4 rounded-full bg-amber-500/20 text-amber-500 flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">
+                                                                            {ri + 1}
+                                                                        </span>
+                                                                        {rec}
+                                                                    </li>
+                                                                ))}
+                                                            </ol>
+                                                        ) : (
+                                                            <p className="text-xs text-amber-700 dark:text-amber-200">
+                                                                Upload additional supporting documents with clear evidence for this sub-criterion to improve the score.
+                                                            </p>
+                                                        )}
                                                     </div>
                                                 )}
                                             </div>
