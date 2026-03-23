@@ -129,8 +129,8 @@ export default function OnboardingPage() {
             <div className="border-b border-border/40 bg-background/80 backdrop-blur-xl">
                 <div className="max-w-3xl mx-auto px-6 py-4 flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-foreground">
-                            <Sparkles className="h-4 w-4 text-white" />
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg overflow-hidden">
+                            <img src="/Accreditailogo.jpg" alt="AccreditAI Logo" className="h-full w-full object-contain" />
                         </div>
                         <span className="text-lg font-bold bg-foreground bg-clip-text text-transparent">AccreditAI</span>
                     </div>

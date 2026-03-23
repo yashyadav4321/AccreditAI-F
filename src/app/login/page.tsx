@@ -63,8 +63,8 @@ export default function LoginPage() {
                 <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iYSIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBwYXR0ZXJuVHJhbnNmb3JtPSJyb3RhdGUoNDUpIj48cGF0aCBkPSJNLTEwIDMwaDYwIiBzdHJva2U9InJnYmEoMjU1LDI1NSwyNTUsMC4wNSkiIHN0cm9rZS13aWR0aD0iMSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3QgZmlsbD0idXJsKCNhKSIgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIvPjwvc3ZnPg==')] opacity-50" />
                 <div className="relative z-10 flex flex-col justify-center px-16">
                     <div className="flex items-center gap-3 mb-8">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-sm">
-                            <Sparkles className="h-6 w-6 text-white" />
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl overflow-hidden bg-white/10 backdrop-blur-sm p-1">
+                            <img src="/Accreditailogo.jpg" alt="AccreditAI Logo" className="h-full w-full object-contain" />
                         </div>
                         <span className="text-3xl font-bold text-white">AccreditAI</span>
                     </div>
@@ -94,8 +94,8 @@ export default function LoginPage() {
                     className="w-full max-w-md"
                 >
                     <div className="lg:hidden flex items-center gap-2 mb-8">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-foreground">
-                            <Sparkles className="h-5 w-5 text-white" />
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl overflow-hidden p-0.5">
+                            <img src="/Accreditailogo.jpg" alt="AccreditAI Logo" className="h-full w-full object-contain" />
                         </div>
                         <span className="text-xl font-bold bg-foreground bg-clip-text text-transparent">
                             AccreditAI

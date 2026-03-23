@@ -203,8 +203,8 @@ export default function Sidebar() {
                 <div className="flex h-16 items-center justify-between border-b border-border px-4">
                     {!collapsed && (
                         <Link href="/" className="flex items-center gap-2">
-                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-foreground">
-                                <Sparkles className="h-4 w-4 text-background" />
+                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg overflow-hidden">
+                                <img src="/Accreditailogo.jpg" alt="AccreditAI Logo" className="h-full w-full object-contain" />
                             </div>
                             <span className="text-lg font-bold tracking-tight">
                                 AccreditAI
@@ -212,8 +212,8 @@ export default function Sidebar() {
                         </Link>
                     )}
                     {collapsed && (
-                        <div className="flex h-8 w-8 mx-auto items-center justify-center rounded-lg bg-foreground">
-                            <Sparkles className="h-4 w-4 text-background" />
+                        <div className="flex h-8 w-8 mx-auto shrink-0 items-center justify-center rounded-lg overflow-hidden">
+                            <img src="/logo.png" alt="AccreditAI Logo" className="h-full w-full object-contain" />
                         </div>
                     )}
                 </div>

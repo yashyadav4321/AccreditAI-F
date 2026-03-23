@@ -86,8 +86,8 @@ function VerifyOTPContent() {
                 className="relative z-10 w-full max-w-md"
             >
                 <div className="flex items-center gap-2 mb-8 justify-center">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-foreground">
-                        <Sparkles className="h-5 w-5 text-white" />
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl overflow-hidden p-0.5">
+                        <img src="/Accreditailogo.jpg" alt="AccreditAI Logo" className="h-full w-full object-contain" />
                     </div>
                     <span className="text-xl font-bold bg-foreground bg-clip-text text-transparent">
                         AccreditAI

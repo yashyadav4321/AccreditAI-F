@@ -112,8 +112,8 @@ export default function LandingPage() {
       <nav className="sticky top-0 z-50 border-b border-border/40 bg-background/80 backdrop-blur-xl">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-foreground shadow-lg shadow-foreground/10">
-              <Sparkles className="h-5 w-5 text-white" />
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl overflow-hidden p-0.5">
+              <img src="/Accreditailogo.jpg" alt="AccreditAI Logo" className="h-full w-full object-contain" />
             </div>
             <span className="text-xl font-bold bg-foreground bg-clip-text text-transparent">
               AccreditAI
@@ -350,8 +350,8 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-foreground">
-                <Sparkles className="h-4 w-4 text-white" />
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg overflow-hidden">
+                <img src="/Accreditailogo.jpg" alt="AccreditAI" className="h-full w-full object-contain" />
               </div>
               <span className="text-lg font-bold bg-foreground bg-clip-text text-transparent">
                 AccreditAI

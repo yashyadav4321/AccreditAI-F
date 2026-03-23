@@ -114,8 +114,8 @@ export default function ForgotPasswordPage() {
         <div className="min-h-screen flex items-center justify-center p-8 bg-background">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md">
                 <div className="flex items-center gap-2 mb-8 justify-center">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-foreground">
-                        <Sparkles className="h-5 w-5 text-white" />
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl overflow-hidden p-0.5">
+                        <img src="/Accreditailogo.jpg" alt="AccreditAI Logo" className="h-full w-full object-contain" />
                     </div>
                     <span className="text-xl font-bold bg-foreground bg-clip-text text-transparent">AccreditAI</span>
                 </div>
