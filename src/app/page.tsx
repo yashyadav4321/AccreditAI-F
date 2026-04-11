@@ -7,8 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
   GraduationCap,
-  Award,
-  TrendingUp,
   Brain,
   FileText,
   Shield,
@@ -26,18 +24,6 @@ const features = [
     title: 'NAAC Automation',
     description: 'Manage all 7 criteria with smart sub-criteria tracking, document uploads, and compliance scoring.',
     color: 'from-foreground/80 to-foreground',
-  },
-  {
-    icon: Award,
-    title: 'NBA Compliance',
-    description: 'Program outcomes, CO-PO mapping matrix, SAR data preparation, and attainment tracking.',
-    color: 'from-neutral-700 to-neutral-900',
-  },
-  {
-    icon: TrendingUp,
-    title: 'NIRF Rankings',
-    description: 'Track all 5 NIRF parameters with metric-level data entry and real-time score calculations.',
-    color: 'from-amber-500 to-orange-600',
   },
   {
     icon: Brain,
@@ -72,7 +58,7 @@ const pricingPlans = [
     price: '₹9,999',
     period: '/month',
     description: 'For small colleges starting their accreditation journey',
-    features: ['1 Framework (NAAC/NBA/NIRF)', '5 Department limit', 'Basic AI Analysis', '10GB Document Storage', 'Email Support'],
+    features: ['NAAC Framework', '5 Department limit', 'Basic AI Analysis', '10GB Document Storage', 'Email Support'],
     popular: false,
   },
   {
@@ -80,7 +66,7 @@ const pricingPlans = [
     price: '₹24,999',
     period: '/month',
     description: 'For colleges serious about accreditation excellence',
-    features: ['All 3 Frameworks', 'Unlimited Departments', 'Advanced AI Analysis', '100GB Document Storage', 'Priority Support', 'Custom Reports', 'API Access'],
+    features: ['Full NAAC Suite', 'Unlimited Departments', 'Advanced AI Analysis', '100GB Document Storage', 'Priority Support', 'Custom Reports', 'API Access'],
     popular: true,
   },
   {
@@ -113,7 +99,10 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl overflow-hidden p-0.5">
-              <img src="/Accreditailogo.jpg" alt="AccreditAI Logo" className="h-full w-full object-contain" />
+              <>
+                <img src="/logo-black-bg.jpg" alt="AccreditAI Logo" className="h-full w-full object-contain dark:hidden" />
+                <img src="/logo-white-bg.jpg" alt="AccreditAI Logo" className="h-full w-full object-contain hidden dark:block" />
+              </>
             </div>
             <span className="text-xl font-bold bg-foreground bg-clip-text text-transparent">
               AccreditAI
@@ -170,7 +159,7 @@ export default function LandingPage() {
               transition={{ duration: 0.5, delay: 0.2 }}
               className="mt-6 text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed"
             >
-              Automate NAAC, NBA, and NIRF compliance for your institution with AI-driven gap analysis,
+              Automate NAAC compliance for your institution with AI-driven gap analysis,
               smart document management, and real-time readiness tracking.
             </motion.p>
 
@@ -249,7 +238,7 @@ export default function LandingPage() {
               variants={fadeInUp}
               className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto"
             >
-              A comprehensive platform that handles every aspect of NAAC, NBA, and NIRF preparation
+              A comprehensive platform that handles every aspect of NAAC accreditation preparation
             </motion.p>
           </motion.div>
 
@@ -351,7 +340,10 @@ export default function LandingPage() {
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg overflow-hidden">
-                <img src="/Accreditailogo.jpg" alt="AccreditAI" className="h-full w-full object-contain" />
+                <>
+                  <img src="/logo-black-bg.jpg" alt="AccreditAI" className="h-full w-full object-contain dark:hidden" />
+                  <img src="/logo-white-bg.jpg" alt="AccreditAI" className="h-full w-full object-contain hidden dark:block" />
+                </>
               </div>
               <span className="text-lg font-bold bg-foreground bg-clip-text text-transparent">
                 AccreditAI

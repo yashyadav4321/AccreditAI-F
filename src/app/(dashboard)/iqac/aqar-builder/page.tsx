@@ -30,7 +30,7 @@ export default function AqarBuilderPage() {
         try {
             const res = await iqacService.generateAqar(selectedYear);
             setAqar(res.data.data);
-            toast.success('AQAR generated with pre-filled data from NAAC, NBA, and NIRF modules');
+            toast.success('AQAR generated with pre-filled data from NAAC modules');
         } catch (err: any) {
             toast.error(err.response?.data?.message || 'Failed to generate AQAR');
         } finally { setLoading(false); }
@@ -107,7 +107,7 @@ export default function AqarBuilderPage() {
                         <CardHeader className="text-center">
                             <FileBarChart className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
                             <CardTitle>Generate a New AQAR</CardTitle>
-                            <CardDescription>Select an academic year to auto-generate your AQAR from NAAC, NBA, and NIRF data.</CardDescription>
+                            <CardDescription>Select an academic year to auto-generate your AQAR from NAAC data.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div className="grid gap-2">

@@ -4,7 +4,7 @@ export interface EvidenceTag {
     id: string;
     collegeId: string;
     documentId: string;
-    module: 'NAAC' | 'NBA' | 'NIRF';
+    module: 'NAAC';
     criterionId: string;
     criterionRef?: string;
     taggedById: string;
@@ -16,8 +16,6 @@ export interface EvidenceTag {
 export interface CoverageScore {
     overall: number;
     naac: { coverage: number; totalCriteria: number; tagged: number };
-    nba: { coverage: number; totalItems: number; tagged: number };
-    nirf: { coverage: number; totalParams: number; tagged: number };
     totalDocumentsTagged: number;
 }
 

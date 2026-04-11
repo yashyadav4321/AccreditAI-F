@@ -11,8 +11,6 @@ import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/comp
 import {
     LayoutDashboard,
     GraduationCap,
-    Award,
-    TrendingUp,
     FileText,
     Brain,
     Settings,
@@ -68,9 +66,6 @@ const COLLEGE_ADMIN_NAV: NavGroup[] = [
             { title: 'NAAC', href: '/naac', icon: GraduationCap },
             { title: 'Best Practices', href: '/naac/best-practices', icon: Star },
             { title: 'DVV Tracker', href: '/naac/dvv', icon: ClipboardCheck },
-            { title: 'NBA', href: '/nba', icon: Award },
-            { title: 'NIRF', href: '/nirf', icon: TrendingUp },
-            { title: 'NIRF Comparison', href: '/nirf-comparison', icon: BarChart3 },
             { title: 'Readiness', href: '/readiness', icon: Gauge, badge: 'Score' },
             { title: 'Visit Prep', href: '/visit-prep', icon: ListChecks },
         ],
@@ -153,7 +148,6 @@ const HOD_NAV: NavGroup[] = [
         label: 'Accreditation',
         items: [
             { title: 'NAAC', href: '/naac', icon: GraduationCap },
-            { title: 'NBA', href: '/nba', icon: Award },
             { title: 'Visit Prep', href: '/visit-prep', icon: ListChecks },
         ],
     },
@@ -204,7 +198,10 @@ export default function Sidebar() {
                     {!collapsed && (
                         <Link href="/" className="flex items-center gap-2">
                             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg overflow-hidden">
-                                <img src="/Accreditailogo.jpg" alt="AccreditAI Logo" className="h-full w-full object-contain" />
+                                <>
+                                    <img src="/logo-black-bg.jpg" alt="AccreditAI Logo" className="h-full w-full object-contain dark:hidden" />
+                                    <img src="/logo-white-bg.jpg" alt="AccreditAI Logo" className="h-full w-full object-contain hidden dark:block" />
+                                </>
                             </div>
                             <span className="text-lg font-bold tracking-tight">
                                 AccreditAI

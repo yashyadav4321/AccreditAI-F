@@ -56,8 +56,6 @@ export default function EvidenceTagsPage() {
 
     const frameworkColors: Record<string, string> = {
         NAAC: 'bg-blue-500/20 text-blue-400',
-        NBA: 'bg-emerald-500/20 text-emerald-400',
-        NIRF: 'bg-purple-500/20 text-purple-400',
     };
 
     return (
@@ -79,8 +77,6 @@ export default function EvidenceTagsPage() {
                                         <SelectTrigger><SelectValue /></SelectTrigger>
                                         <SelectContent>
                                             <SelectItem value="NAAC">NAAC</SelectItem>
-                                            <SelectItem value="NBA">NBA</SelectItem>
-                                            <SelectItem value="NIRF">NIRF</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
@@ -96,8 +92,8 @@ export default function EvidenceTagsPage() {
             {/* Coverage Overview */}
             {coverage && (
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }}>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        {([{ framework: 'NAAC', data: coverage.naac, total: coverage.naac?.totalCriteria }, { framework: 'NBA', data: coverage.nba, total: coverage.nba?.totalItems }, { framework: 'NIRF', data: coverage.nirf, total: coverage.nirf?.totalParams }] as { framework: string; data: { coverage: number; tagged: number } | undefined; total: number | undefined }[]).filter(fw => fw.data).map(fw => (
+                    <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+                        {([{ framework: 'NAAC', data: coverage.naac, total: coverage.naac?.totalCriteria }] as { framework: string; data: { coverage: number; tagged: number } | undefined; total: number | undefined }[]).filter(fw => fw.data).map(fw => (
                             <Card key={fw.framework} className="bg-card/50 backdrop-blur">
                                 <CardContent className="p-4">
                                     <div className="flex items-center justify-between mb-2">

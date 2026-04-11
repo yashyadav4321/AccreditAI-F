@@ -115,7 +115,10 @@ export default function ForgotPasswordPage() {
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md">
                 <div className="flex items-center gap-2 mb-8 justify-center">
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl overflow-hidden p-0.5">
-                        <img src="/Accreditailogo.jpg" alt="AccreditAI Logo" className="h-full w-full object-contain" />
+                        <>
+                            <img src="/logo-black-bg.jpg" alt="AccreditAI Logo" className="h-full w-full object-contain dark:hidden" />
+                            <img src="/logo-white-bg.jpg" alt="AccreditAI Logo" className="h-full w-full object-contain hidden dark:block" />
+                        </>
                     </div>
                     <span className="text-xl font-bold bg-foreground bg-clip-text text-transparent">AccreditAI</span>
                 </div>

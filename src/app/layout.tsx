@@ -13,9 +13,8 @@ const inter = Inter({
 /* v1.0.1 */
 export const metadata: Metadata = {
   title: 'AccreditAI — Compliance without the chaos.',
-  description:
-    'AccreditAI — Compliance without the chaos. Automate NAAC, NBA, and NIRF accreditation for Indian colleges with AI-powered analysis, document management, and reporting.',
-  keywords: ['NAAC', 'NBA', 'NIRF', 'accreditation', 'compliance', 'AI', 'Indian colleges'],
+  description: 'AI-powered accreditation management for NAAC compliance',
+  keywords: ['NAAC', 'accreditation', 'higher education', 'AI', 'compliance'],
 };
 
 export default function RootLayout({

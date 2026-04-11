@@ -20,24 +20,6 @@ export interface DashboardData {
                 status: string;
             }[];
         };
-        nirf: {
-            overallScore: number;
-            parameters: {
-                number: number;
-                title: string;
-                score: number;
-                maxScore: number;
-            }[];
-        };
-        nba: {
-            programCount: number;
-            programs: {
-                id: string;
-                name: string;
-                outcomesCount: number;
-                isAccredited: boolean;
-            }[];
-        };
     };
     documents: {
         totalCount: number;

@@ -8,7 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import {
-    Gauge, GraduationCap, Award, TrendingUp, FileText, ClipboardCheck,
+    Gauge, GraduationCap, FileText, ClipboardCheck,
     CheckCircle, AlertTriangle, Lightbulb,
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -18,8 +18,6 @@ const stagger = { hidden: {}, visible: { transition: { staggerChildren: 0.08 } }
 
 const ICONS: Record<string, React.ReactNode> = {
     naac: <GraduationCap className="h-5 w-5" />,
-    nba: <Award className="h-5 w-5" />,
-    nirf: <TrendingUp className="h-5 w-5" />,
     documents: <FileText className="h-5 w-5" />,
     dvv: <ClipboardCheck className="h-5 w-5" />,
 };
@@ -67,7 +65,7 @@ export default function ReadinessPage() {
             <div className="text-center py-20">
                 <Gauge className="h-16 w-16 mx-auto text-muted-foreground/30 mb-4" />
                 <h2 className="text-xl font-semibold">Unable to calculate readiness</h2>
-                <p className="text-muted-foreground mt-1">Ensure you have data in at least one module (NAAC, NBA, NIRF)</p>
+                <p className="text-muted-foreground mt-1">Ensure you have data in at least one module (NAAC)</p>
             </div>
         );
     }

@@ -15,29 +15,20 @@ export interface AiReport {
 }
 
 const aiService = {
-    analyzeNaac: (data?: { criterionId?: string }) =>
-        api.post('/ai/analyze/naac', data),
+    analyzeNaac: (criterionId?: string) =>
+        api.post('/ai/analyze/naac', { criterionId }),
 
-    analyzeNba: (data: { programId: string }) =>
-        api.post('/ai/analyze/nba', data),
+    runFullAnalysis: () => api.post('/ai/analyze/full'),
 
-    analyzeNirf: () =>
-        api.post('/ai/analyze/nirf'),
+    generateReport: (framework: string, reportType: string) =>
+        api.post('/ai/reports/generate', { framework, reportType }),
 
-    analyzeFull: () =>
-        api.post('/ai/analyze/full'),
+    getReports: (framework?: string) =>
+        api.get('/ai/reports', { params: { framework } }),
 
-    generateReport: (data: { framework: string; reportType: string }) =>
-        api.post('/ai/reports/generate', data),
+    getReportById: (id: string) => api.get(`/ai/reports/${id}`),
 
-    getReports: (params?: { framework?: string }) =>
-        api.get<AiReport[]>('/ai/reports', { params }),
-
-    getReportById: (id: string) =>
-        api.get<AiReport>(`/ai/reports/${id}`),
-
-    deleteReport: (id: string) =>
-        api.delete(`/ai/reports/${id}`),
+    deleteReport: (id: string) => api.delete(`/ai/reports/${id}`),
 };
 
 export default aiService;

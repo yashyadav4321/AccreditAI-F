@@ -130,7 +130,10 @@ export default function OnboardingPage() {
                 <div className="max-w-3xl mx-auto px-6 py-4 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg overflow-hidden">
-                            <img src="/Accreditailogo.jpg" alt="AccreditAI Logo" className="h-full w-full object-contain" />
+                            <>
+                                <img src="/logo-black-bg.jpg" alt="AccreditAI Logo" className="h-full w-full object-contain dark:hidden" />
+                                <img src="/logo-white-bg.jpg" alt="AccreditAI Logo" className="h-full w-full object-contain hidden dark:block" />
+                            </>
                         </div>
                         <span className="text-lg font-bold bg-foreground bg-clip-text text-transparent">AccreditAI</span>
                     </div>
@@ -272,8 +275,6 @@ export default function OnboardingPage() {
                                         <div className="space-y-4">
                                             {[
                                                 { id: 'NAAC', name: 'NAAC', desc: 'National Assessment and Accreditation Council — 7 criteria framework for institutional quality', color: 'from-foreground/80 to-foreground' },
-                                                { id: 'NBA', name: 'NBA', desc: 'National Board of Accreditation — Program-level accreditation with outcome-based assessment', color: 'from-neutral-700 to-neutral-900' },
-                                                { id: 'NIRF', name: 'NIRF', desc: 'National Institutional Ranking Framework — 5 parameter ranking system', color: 'from-amber-500 to-orange-600' },
                                             ].map(fw => (
                                                 <div key={fw.id} onClick={() => toggleFramework(fw.id)}
                                                     className={`p-5 rounded-xl border-2 cursor-pointer transition-all ${selectedFrameworks.includes(fw.id) ? 'border-border bg-accent0/5' : 'border-border hover:border-border/80'}`}>

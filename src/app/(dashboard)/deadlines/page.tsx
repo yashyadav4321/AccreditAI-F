@@ -102,7 +102,7 @@ export default function DeadlinesPage() {
                             <div className="space-y-2"><Label>Description</Label><Textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} /></div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2"><Label>Framework</Label>
-                                    <Select value={form.framework} onValueChange={v => setForm({ ...form, framework: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="NAAC">NAAC</SelectItem><SelectItem value="NBA">NBA</SelectItem><SelectItem value="NIRF">NIRF</SelectItem></SelectContent></Select>
+                                    <Select value={form.framework} onValueChange={v => setForm({ ...form, framework: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="NAAC">NAAC</SelectItem></SelectContent></Select>
                                 </div>
                                 <div className="space-y-2"><Label>Priority</Label>
                                     <Select value={form.priority} onValueChange={v => setForm({ ...form, priority: v as 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT' })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="LOW">Low</SelectItem><SelectItem value="MEDIUM">Medium</SelectItem><SelectItem value="HIGH">High</SelectItem></SelectContent></Select>

@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { GraduationCap, Award, TrendingUp, FileText, Clock, AlertTriangle, Brain, CheckCircle2 } from 'lucide-react';
+import { GraduationCap, FileText, Clock, AlertTriangle, Brain, CheckCircle2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 
@@ -72,8 +72,6 @@ export default function DashboardPage() {
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-4 max-w-2xl mx-auto">
                                 {[
                                     { label: 'NAAC', href: '/naac', icon: GraduationCap, color: 'text-blue-500' },
-                                    { label: 'NBA', href: '/nba', icon: Award, color: 'text-muted-foreground' },
-                                    { label: 'NIRF', href: '/nirf', icon: TrendingUp, color: 'text-amber-500' },
                                     { label: 'Documents', href: '/documents', icon: FileText, color: 'text-emerald-500' },
                                 ].map((item) => {
                                     const Icon = item.icon;
@@ -94,16 +92,12 @@ export default function DashboardPage() {
 
     // Map backend response to stats cards
     const naacScore = data.compliance?.naac?.overallScore || 0;
-    const nbaCount = data.compliance?.nba?.programCount || 0;
-    const nirfScore = data.compliance?.nirf?.overallScore || 0;
     const totalDocs = data.documents?.totalCount || 0;
     const pendingTasks = data.pendingTasks || 0;
     const upcomingDeadlineCount = data.upcomingDeadlines?.length || 0;
 
     const stats = [
         { title: 'NAAC Compliance', value: `${naacScore}%`, icon: GraduationCap, color: 'text-blue-500', bg: 'bg-blue-500/10' },
-        { title: 'NBA Programs', value: nbaCount, icon: Award, color: 'text-muted-foreground', bg: 'bg-accent0/10' },
-        { title: 'NIRF Score', value: nirfScore, icon: TrendingUp, color: 'text-amber-500', bg: 'bg-amber-500/10' },
         { title: 'Total Documents', value: totalDocs, icon: FileText, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
     ];
 
@@ -281,7 +275,7 @@ export default function DashboardPage() {
             <motion.div variants={fadeIn}>
                 <Card className="border-border/50 bg-gradient-to-r from-foreground/5 to-foreground/5">
                     <CardContent className="p-6">
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                        <div className="grid grid-cols-2 md:grid-cols-2 gap-6">
                             <div>
                                 <p className="text-sm text-muted-foreground">Pending Tasks</p>
                                 <p className="text-2xl font-bold text-amber-500">{pendingTasks}</p>
@@ -289,14 +283,6 @@ export default function DashboardPage() {
                             <div>
                                 <p className="text-sm text-muted-foreground">Upcoming Deadlines</p>
                                 <p className="text-2xl font-bold text-red-500">{upcomingDeadlineCount}</p>
-                            </div>
-                            <div>
-                                <p className="text-sm text-muted-foreground">NBA Programs</p>
-                                <p className="text-2xl font-bold text-muted-foreground">{nbaCount}</p>
-                            </div>
-                            <div>
-                                <p className="text-sm text-muted-foreground">NIRF Score</p>
-                                <p className="text-2xl font-bold text-emerald-500">{nirfScore}</p>
                             </div>
                         </div>
                     </CardContent>

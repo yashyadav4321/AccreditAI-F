@@ -94,7 +94,10 @@ export default function SignupPage() {
                 <div className="relative z-10 flex flex-col justify-center px-16">
                     <div className="flex items-center gap-3 mb-8">
                         <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl overflow-hidden bg-white/10 backdrop-blur-sm p-1">
-                            <img src="/Accreditailogo.jpg" alt="AccreditAI Logo" className="h-full w-full object-contain" />
+                            <>
+                                <img src="/logo-black-bg.jpg" alt="AccreditAI Logo" className="h-full w-full object-contain dark:hidden" />
+                                <img src="/logo-white-bg.jpg" alt="AccreditAI Logo" className="h-full w-full object-contain hidden dark:block" />
+                            </>
                         </div>
                         <span className="text-3xl font-bold text-white">AccreditAI</span>
                     </div>
@@ -117,7 +120,10 @@ export default function SignupPage() {
                 >
                     <div className="lg:hidden flex items-center gap-2 mb-8">
                         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl overflow-hidden p-0.5">
-                            <img src="/Accreditailogo.jpg" alt="AccreditAI Logo" className="h-full w-full object-contain" />
+                            <>
+                                <img src="/logo-black-bg.jpg" alt="AccreditAI Logo" className="h-full w-full object-contain dark:hidden" />
+                                <img src="/logo-white-bg.jpg" alt="AccreditAI Logo" className="h-full w-full object-contain hidden dark:block" />
+                            </>
                         </div>
                         <span className="text-xl font-bold bg-foreground bg-clip-text text-transparent">
                             AccreditAI
