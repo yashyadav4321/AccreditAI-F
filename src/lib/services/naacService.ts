@@ -138,7 +138,7 @@ const naacService = {
         }
         return api.post<{ reportId: string; status: string }>('/naac/analyze-documents', formData, {
             headers: { 'Content-Type': 'multipart/form-data' },
-            timeout: 60000, // Only needs 60s now — just uploads files & gets reportId
+            timeout: 600000,
         });
     },
 
