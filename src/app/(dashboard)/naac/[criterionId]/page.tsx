@@ -152,7 +152,6 @@ export default function NaacCriterionPage() {
         const ref = subFileRefs.current[subNumber];
         if (ref) ref.value = '';
     };
-    };
 
     if (loading) return <div className="space-y-4"><Skeleton className="h-10 w-64" /><Skeleton className="h-32" /><Skeleton className="h-64" /></div>;
 
