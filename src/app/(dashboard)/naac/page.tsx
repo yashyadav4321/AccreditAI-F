@@ -154,7 +154,7 @@ export default function NaacPage() {
         }
     };
 
-    // Criteria-wise upload handler
+    // Criteria-wise upload handler (async polling)
     const handleCriteriaUpload = async (criterionNumber: number, files: FileList) => {
         if (files.length > 30) {
             toast.error('Maximum 30 files per criterion.');
@@ -165,22 +165,29 @@ export default function NaacPage() {
 
         setCriteriaAnalysis(prev => ({ ...prev, [criterionNumber]: { loading: true, result: null } }));
         try {
+            // 1. Upload files — returns reportId immediately
             const res = await naacService.analyzeDocuments(formData, { criterionNumber });
             const d = res.data as unknown as Record<string, unknown>;
-            const result = (d.data as NaacDocumentAnalysisResult) || (res.data as NaacDocumentAnalysisResult);
+            const payload = (d.data as { reportId: string }) || (res.data as unknown as { reportId: string });
+            const reportId = payload.reportId;
+
+            toast.info(`Files uploaded. AI is analysing criterion ${criterionNumber}...`);
+
+            // 2. Poll for the result every 5 seconds
+            const result = await naacService.pollForResult(reportId);
             setCriteriaAnalysis(prev => ({ ...prev, [criterionNumber]: { loading: false, result } }));
             toast.success(`Criterion ${criterionNumber} analysis complete! Saved automatically.`);
-        } catch (error) {
+        } catch (error: any) {
             console.error('[handleCriteriaUpload] Analysis failed:', error);
             setCriteriaAnalysis(prev => ({ ...prev, [criterionNumber]: { loading: false, result: null } }));
-            toast.error('Analysis failed. Please try again.');
+            toast.error(error?.message || 'Analysis failed. Please try again.');
         }
         // Reset file input
         const ref = criteriaFileRefs.current[criterionNumber];
         if (ref) ref.value = '';
     };
 
-    // Sub-criterion upload handler
+    // Sub-criterion upload handler (async polling)
     const handleSubUpload = async (subNumber: string, files: FileList) => {
         if (files.length > 5) {
             toast.error('Maximum 5 files per sub-criterion.');
@@ -191,15 +198,22 @@ export default function NaacPage() {
 
         setSubAnalysis(prev => ({ ...prev, [subNumber]: { loading: true, result: null } }));
         try {
+            // 1. Upload files — returns reportId immediately
             const res = await naacService.analyzeDocuments(formData, { subCriterionNumbers: [subNumber] });
             const d = res.data as unknown as Record<string, unknown>;
-            const result = (d.data as NaacDocumentAnalysisResult) || (res.data as NaacDocumentAnalysisResult);
+            const payload = (d.data as { reportId: string }) || (res.data as unknown as { reportId: string });
+            const reportId = payload.reportId;
+
+            toast.info(`Files uploaded. AI is analysing ${subNumber}...`);
+
+            // 2. Poll for the result every 5 seconds
+            const result = await naacService.pollForResult(reportId);
             setSubAnalysis(prev => ({ ...prev, [subNumber]: { loading: false, result } }));
             toast.success(`${subNumber} analysis complete! Saved automatically.`);
-        } catch (error) {
+        } catch (error: any) {
             console.error('[handleSubUpload] Analysis failed:', error);
             setSubAnalysis(prev => ({ ...prev, [subNumber]: { loading: false, result: null } }));
-            toast.error('Analysis failed. Please try again.');
+            toast.error(error?.message || 'Analysis failed. Please try again.');
         }
         const ref = subFileRefs.current[subNumber];
         if (ref) ref.value = '';

@@ -108,7 +108,7 @@ export default function NaacCriterionPage() {
     const criterionNumber: number = (criterion as any)?.criterionNumber || 0;
     const subCriteriaForThis = ALL_SUB_CRITERIA.filter(s => s.criterion === criterionNumber);
 
-    // Upload all files for this criterion (scoped to criterion)
+    // Upload all files for this criterion (scoped to criterion) — async polling
     const handleCriteriaUpload = async (files: FileList) => {
         if (files.length > 30) { toast.error('Maximum 30 files.'); return; }
         const formData = new FormData();
@@ -119,15 +119,18 @@ export default function NaacCriterionPage() {
         try {
             const res = await naacService.analyzeDocuments(formData, { criterionNumber });
             const d = res.data as unknown as Record<string, unknown>;
-            setCriteriaResult((d.data as NaacDocumentAnalysisResult) || (res.data as NaacDocumentAnalysisResult));
+            const payload = (d.data as { reportId: string }) || (res.data as unknown as { reportId: string });
+            toast.info(`Files uploaded. AI is analysing criterion ${criterionNumber}...`);
+            const result = await naacService.pollForResult(payload.reportId);
+            setCriteriaResult(result);
             toast.success('Criterion analysis complete! Saved automatically.');
-        } catch { toast.error('Analysis failed. Please try again.'); } finally {
+        } catch (err: any) { toast.error(err?.message || 'Analysis failed. Please try again.'); } finally {
             setCriteriaLoading(false);
             if (criteriaFileRef.current) criteriaFileRef.current.value = '';
         }
     };
 
-    // Upload files for a single sub-criterion
+    // Upload files for a single sub-criterion — async polling
     const handleSubUpload = async (subNumber: string, files: FileList) => {
         if (files.length > 5) { toast.error('Maximum 5 files per sub-criterion.'); return; }
         const formData = new FormData();
@@ -137,15 +140,18 @@ export default function NaacCriterionPage() {
         try {
             const res = await naacService.analyzeDocuments(formData, { subCriterionNumbers: [subNumber] });
             const d = res.data as unknown as Record<string, unknown>;
-            const result = (d.data as NaacDocumentAnalysisResult) || (res.data as NaacDocumentAnalysisResult);
+            const payload = (d.data as { reportId: string }) || (res.data as unknown as { reportId: string });
+            toast.info(`Files uploaded. AI is analysing ${subNumber}...`);
+            const result = await naacService.pollForResult(payload.reportId);
             setSubStates(prev => ({ ...prev, [subNumber]: { loading: false, result } }));
             toast.success(`${subNumber} analysed & saved!`);
-        } catch {
+        } catch (err: any) {
             setSubStates(prev => ({ ...prev, [subNumber]: { loading: false, result: null } }));
-            toast.error('Analysis failed.');
+            toast.error(err?.message || 'Analysis failed.');
         }
         const ref = subFileRefs.current[subNumber];
         if (ref) ref.value = '';
+    };
     };
 
     if (loading) return <div className="space-y-4"><Skeleton className="h-10 w-64" /><Skeleton className="h-32" /><Skeleton className="h-64" /></div>;

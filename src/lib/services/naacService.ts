@@ -94,6 +94,13 @@ export interface NaacGapAnalysisResult {
 
 export type NaacAnalysisResultUnion = NaacDocumentAnalysisResult | NaacGapAnalysisResult;
 
+export interface AnalysisStatusResponse {
+    reportId: string;
+    status: 'PROCESSING' | 'COMPLETED' | 'FAILED';
+    result: NaacDocumentAnalysisResult | null;
+    errorMessage: string | null;
+}
+
 const naacService = {
     getCriteria: () =>
         api.get<NaacCriterion[]>('/naac/criteria'),
@@ -121,6 +128,7 @@ const naacService = {
     initSubCriteria: () =>
         api.post('/naac/init-sub-criteria'),
 
+    /** Uploads files and returns { reportId, status: 'PROCESSING' } immediately. */
     analyzeDocuments: (formData: FormData, scope?: { criterionNumber?: number; subCriterionNumbers?: string[] }) => {
         if (scope?.criterionNumber) {
             formData.append('criterionNumber', String(scope.criterionNumber));
@@ -128,22 +136,42 @@ const naacService = {
         if (scope?.subCriterionNumbers?.length) {
             formData.append('subCriterionNumbers', scope.subCriterionNumbers.join(','));
         }
-        return api.post<NaacDocumentAnalysisResult>('/naac/analyze-documents', formData, {
+        return api.post<{ reportId: string; status: string }>('/naac/analyze-documents', formData, {
             headers: { 'Content-Type': 'multipart/form-data' },
-            timeout: 600000,
+            timeout: 60000, // Only needs 60s now — just uploads files & gets reportId
         });
     },
 
-    analyzeDocumentsOnly: (formData: FormData) =>
-        api.post<NaacDocumentAnalysisResult>('/naac/analyze-documents-only', formData, {
-            headers: { 'Content-Type': 'multipart/form-data' },
-            timeout: 600000,
-        }),
+    /** Poll the backend for analysis status. */
+    getAnalysisStatus: (reportId: string) =>
+        api.get<AnalysisStatusResponse>(`/naac/analysis-status/${reportId}`),
 
-    analyzeOnly: (criterionId?: string) =>
-        api.post<NaacGapAnalysisResult>('/naac/analyze-only', { criterionId }, {
-            timeout: 600000,
-        }),
+    /**
+     * Convenience helper: polls getAnalysisStatus every `intervalMs` until
+     * the report reaches COMPLETED or FAILED. Returns the final result or throws.
+     */
+    pollForResult: async (
+        reportId: string,
+        intervalMs = 5000,
+        maxAttempts = 120,
+    ): Promise<NaacDocumentAnalysisResult> => {
+        for (let i = 0; i < maxAttempts; i++) {
+            await new Promise(resolve => setTimeout(resolve, intervalMs));
+
+            const res = await naacService.getAnalysisStatus(reportId);
+            const d = res.data as unknown as Record<string, unknown>;
+            const status = (d.data as AnalysisStatusResponse) || (res.data as unknown as AnalysisStatusResponse);
+
+            if (status.status === 'COMPLETED' && status.result) {
+                return status.result as NaacDocumentAnalysisResult;
+            }
+            if (status.status === 'FAILED') {
+                throw new Error(status.errorMessage || 'Analysis failed');
+            }
+            // still PROCESSING — continue polling
+        }
+        throw new Error('Analysis timed out. Please try again.');
+    },
 
     confirmAnalysis: (analysisResult: NaacAnalysisResultUnion) =>
         api.post('/naac/confirm-analysis', { analysisResult }),
