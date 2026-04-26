@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import naacService, { NaacCriterion, ComplianceSummary, NaacDocumentAnalysisResult } from '@/lib/services/naacService';
+import naacService, { NaacCriterion, ComplianceSummary, NaacDocumentAnalysisResult, CriterionScoreSummary } from '@/lib/services/naacService';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -11,6 +11,8 @@ import { Badge } from '@/components/ui/badge';
 import { GraduationCap, BarChart3, Loader2, Sparkles, Upload, Brain, CheckCircle2, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { MarksMatrix } from '@/components/naac/MarksMatrix';
+import { BenchmarkComparison } from '@/components/naac/BenchmarkComparison';
+import { BENCHMARK_COLLEGES } from '@/lib/data/benchmarkData';
 
 const fadeIn = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } };
 const stagger = { hidden: {}, visible: { transition: { staggerChildren: 0.06 } } };
@@ -111,6 +113,7 @@ export default function NaacPage() {
     const [loading, setLoading] = useState(true);
     const [initializing, setInitializing] = useState(false);
     const [activeTab, setActiveTab] = useState<'criteria' | 'sub-criteria'>('criteria');
+    const [selectedBenchmarkId, setSelectedBenchmarkId] = useState<string>('naac-checklist');
 
     // Per-criterion analysis state (criteria-wise tab)
     const [criteriaAnalysis, setCriteriaAnalysis] = useState<Record<number, AnalysisState>>({});
@@ -118,9 +121,13 @@ export default function NaacPage() {
     // Per-sub-criterion analysis state (sub-criteria tab)
     const [subAnalysis, setSubAnalysis] = useState<Record<string, AnalysisState>>({});
 
+    // Full SSR analysis state
+    const [fullAnalysis, setFullAnalysis] = useState<AnalysisState>({ loading: false, result: null });
+
     // Hidden file inputs: one per criterion (1-7) and one per sub-criterion
     const criteriaFileRefs = useRef<Record<number, HTMLInputElement | null>>({});
     const subFileRefs = useRef<Record<string, HTMLInputElement | null>>({});
+    const fullFileRef = useRef<HTMLInputElement | null>(null);
 
     const fetchData = async () => {
         try {
@@ -154,6 +161,39 @@ export default function NaacPage() {
         }
     };
 
+    // Full SSR upload handler
+    const handleFullUpload = async (files: FileList) => {
+        if (files.length > 5) {
+            toast.error('Maximum 5 files for Full SSR Upload.');
+            return;
+        }
+        const formData = new FormData();
+        for (let i = 0; i < files.length; i++) formData.append('files', files[i]);
+
+        setFullAnalysis({ loading: true, result: null });
+        try {
+            const scopeParams: any = {};
+            if (selectedBenchmarkId !== 'naac-checklist') {
+                scopeParams.benchmarkCollegeId = selectedBenchmarkId;
+            }
+            const res = await naacService.analyzeDocuments(formData, scopeParams);
+            const d = res.data as unknown as Record<string, unknown>;
+            const payload = (d.data as { reportId: string }) || (res.data as unknown as { reportId: string });
+            const reportId = payload.reportId;
+
+            toast.info(`Files uploaded. AI is analysing the entire SSR...`);
+
+            const result = await naacService.pollForResult(reportId);
+            setFullAnalysis({ loading: false, result });
+            toast.success(`Full SSR analysis complete! Saved automatically.`);
+        } catch (error: any) {
+            console.error('[handleFullUpload] Analysis failed:', error);
+            setFullAnalysis({ loading: false, result: null });
+            toast.error(error?.message || 'Analysis failed. Please try again.');
+        }
+        if (fullFileRef.current) fullFileRef.current.value = '';
+    };
+
     // Criteria-wise upload handler (async polling)
     const handleCriteriaUpload = async (criterionNumber: number, files: FileList) => {
         if (files.length > 30) {
@@ -166,7 +206,11 @@ export default function NaacPage() {
         setCriteriaAnalysis(prev => ({ ...prev, [criterionNumber]: { loading: true, result: null } }));
         try {
             // 1. Upload files — returns reportId immediately
-            const res = await naacService.analyzeDocuments(formData, { criterionNumber });
+            const scopeParams: any = { criterionNumber };
+            if (selectedBenchmarkId !== 'naac-checklist') {
+                scopeParams.benchmarkCollegeId = selectedBenchmarkId;
+            }
+            const res = await naacService.analyzeDocuments(formData, scopeParams);
             const d = res.data as unknown as Record<string, unknown>;
             const payload = (d.data as { reportId: string }) || (res.data as unknown as { reportId: string });
             const reportId = payload.reportId;
@@ -199,7 +243,11 @@ export default function NaacPage() {
         setSubAnalysis(prev => ({ ...prev, [subNumber]: { loading: true, result: null } }));
         try {
             // 1. Upload files — returns reportId immediately
-            const res = await naacService.analyzeDocuments(formData, { subCriterionNumbers: [subNumber] });
+            const scopeParams: any = { subCriterionNumbers: [subNumber] };
+            if (selectedBenchmarkId !== 'naac-checklist') {
+                scopeParams.benchmarkCollegeId = selectedBenchmarkId;
+            }
+            const res = await naacService.analyzeDocuments(formData, scopeParams);
             const d = res.data as unknown as Record<string, unknown>;
             const payload = (d.data as { reportId: string }) || (res.data as unknown as { reportId: string });
             const reportId = payload.reportId;
@@ -249,19 +297,79 @@ export default function NaacPage() {
                 <motion.div variants={fadeIn}>
                     <Card className="border-border/50 bg-gradient-to-r from-foreground/5 to-foreground/5">
                         <CardContent className="p-6">
-                            <div className="flex items-center justify-between mb-4">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
                                 <div className="flex items-center gap-3">
                                     <div className="h-12 w-12 rounded-xl bg-accent flex items-center justify-center">
                                         <BarChart3 className="h-6 w-6 text-foreground" />
                                     </div>
                                     <div>
-                                        <p className="font-semibold">Overall Compliance</p>
+                                        <p className="font-semibold text-lg">Overall Compliance</p>
                                         <p className="text-sm text-muted-foreground">Across all 7 criteria</p>
                                     </div>
+                                    
+                                    <div className="ml-4 pl-4 border-l border-border hidden sm:block">
+                                        <input
+                                            type="file"
+                                            multiple
+                                            accept=".pdf,.docx,.doc,.txt"
+                                            className="hidden"
+                                            ref={fullFileRef}
+                                            onChange={e => {
+                                                if (e.target.files?.length) handleFullUpload(e.target.files);
+                                            }}
+                                        />
+                                        <Button 
+                                            size="sm" 
+                                            variant="secondary"
+                                            disabled={fullAnalysis.loading}
+                                            onClick={() => fullFileRef.current?.click()}
+                                        >
+                                            {fullAnalysis.loading ? (
+                                                <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Analysing All...</>
+                                            ) : (
+                                                <><Upload className="mr-2 h-4 w-4" />Upload Full SSR</>
+                                            )}
+                                        </Button>
+                                    </div>
                                 </div>
-                                <span className="text-4xl font-bold text-foreground">{summary.overallPercentage?.toFixed(1) || 0}%</span>
+                                <div className="flex items-center gap-4">
+                                    <div className="sm:hidden">
+                                        <Button 
+                                            size="sm" 
+                                            variant="secondary"
+                                            disabled={fullAnalysis.loading}
+                                            onClick={() => fullFileRef.current?.click()}
+                                        >
+                                            {fullAnalysis.loading ? (
+                                                <Loader2 className="h-4 w-4 animate-spin" />
+                                            ) : (
+                                                <Upload className="h-4 w-4" />
+                                            )}
+                                        </Button>
+                                    </div>
+                                    <span className="text-4xl font-bold text-foreground">{summary.overallPercentage?.toFixed(1) || 0}%</span>
+                                </div>
                             </div>
                             <Progress value={summary.overallPercentage || 0} className="h-3" />
+                            
+                            {/* Inline results for Full SSR Analysis if present */}
+                            {fullAnalysis.result && (
+                                <div className="mt-6 pt-6 border-t border-border/30">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <h3 className="font-semibold text-sm text-emerald-600 dark:text-emerald-400 flex items-center gap-2">
+                                            <CheckCircle2 className="h-4 w-4" />
+                                            Full SSR Analysis Complete
+                                        </h3>
+                                        <button
+                                            onClick={() => setFullAnalysis({ loading: false, result: null })}
+                                            className="text-muted-foreground hover:text-foreground transition-colors"
+                                        >
+                                            <X className="h-4 w-4" />
+                                        </button>
+                                    </div>
+                                    <MarksMatrix result={fullAnalysis.result} />
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
                 </motion.div>
@@ -290,6 +398,25 @@ export default function NaacPage() {
                         <Brain className="inline h-4 w-4 mr-2" />
                         Sub-Criteria-wise Upload
                     </button>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mt-4 p-4 bg-muted/50 rounded-xl border border-border/50">
+                    <div>
+                        <p className="text-sm font-medium">Comparison Baseline</p>
+                        <p className="text-xs text-muted-foreground">The AI will use this as the baseline to score your documents</p>
+                    </div>
+                    <select 
+                        value={selectedBenchmarkId}
+                        onChange={(e) => setSelectedBenchmarkId(e.target.value)}
+                        className="flex h-9 w-full sm:w-[300px] sm:ml-auto items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                    >
+                        <option value="naac-checklist">Generic NAAC Checklist</option>
+                        <optgroup label="A++ Benchmark Colleges">
+                            {BENCHMARK_COLLEGES.map(c => (
+                                <option key={c.id} value={c.id}>{c.name}</option>
+                            ))}
+                        </optgroup>
+                    </select>
                 </div>
             </motion.div>
 
@@ -494,6 +621,45 @@ export default function NaacPage() {
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            {/* ── Benchmark Comparison ── */}
+            {(() => {
+                // Collect all completed criterion scores across all analyses
+                const allScores: CriterionScoreSummary[] = [];
+                Object.values(criteriaAnalysis).forEach(state => {
+                    if (state.result?.criteriaScores) {
+                        state.result.criteriaScores.forEach(cs => {
+                            if (!allScores.find(s => s.criterionNumber === cs.criterionNumber)) {
+                                allScores.push(cs);
+                            }
+                        });
+                    }
+                });
+                Object.values(subAnalysis).forEach(state => {
+                    if (state.result?.criteriaScores) {
+                        state.result.criteriaScores.forEach(cs => {
+                            if (!allScores.find(s => s.criterionNumber === cs.criterionNumber)) {
+                                allScores.push(cs);
+                            }
+                        });
+                    }
+                });
+                if (fullAnalysis.result?.criteriaScores) {
+                    fullAnalysis.result.criteriaScores.forEach(cs => {
+                        if (!allScores.find(s => s.criterionNumber === cs.criterionNumber)) {
+                            allScores.push(cs);
+                        }
+                    });
+                }
+
+                return (
+                    <motion.div variants={fadeIn}>
+                        <div className="border-t border-border/30 mt-2 pt-6">
+                            <BenchmarkComparison userScores={allScores} />
+                        </div>
+                    </motion.div>
+                );
+            })()}
         </motion.div>
     );
 }

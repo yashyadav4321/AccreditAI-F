@@ -129,12 +129,15 @@ const naacService = {
         api.post('/naac/init-sub-criteria'),
 
     /** Uploads files and returns { reportId, status: 'PROCESSING' } immediately. */
-    analyzeDocuments: (formData: FormData, scope?: { criterionNumber?: number; subCriterionNumbers?: string[] }) => {
+    analyzeDocuments: (formData: FormData, scope?: { criterionNumber?: number; subCriterionNumbers?: string[]; benchmarkCollegeId?: string }) => {
         if (scope?.criterionNumber) {
             formData.append('criterionNumber', String(scope.criterionNumber));
         }
         if (scope?.subCriterionNumbers?.length) {
             formData.append('subCriterionNumbers', scope.subCriterionNumbers.join(','));
+        }
+        if (scope?.benchmarkCollegeId) {
+            formData.append('benchmarkCollegeId', scope.benchmarkCollegeId);
         }
         return api.post<{ reportId: string; status: string }>('/naac/analyze-documents', formData, {
             headers: { 'Content-Type': 'multipart/form-data' },
@@ -175,6 +178,62 @@ const naacService = {
 
     confirmAnalysis: (analysisResult: NaacAnalysisResultUnion) =>
         api.post('/naac/confirm-analysis', { analysisResult }),
+
+    // ── Benchmark SSR Data ──────────────────────────────────────────────
+    /** Fetch all extracted benchmark college data (with sub-criterion scores + evidence). */
+    getBenchmarkData: () =>
+        api.get<{ data: BenchmarkSSRData[]; extracted: boolean; count: number }>('/naac/benchmark-data'),
+
+    /** Fetch extracted data for a specific benchmark college. */
+    getBenchmarkCollegeData: (collegeId: string) =>
+        api.get<{ data: BenchmarkSSRData }>(`/naac/benchmark-data/${collegeId}`),
+
+    /** List available SSR PDFs for a specific benchmark college. */
+    listBenchmarkPdfs: (collegeId: string) =>
+        api.get<{ collegeId: string; folderName: string; pdfs: BenchmarkPdfInfo[] }>(`/naac/benchmark-pdfs/${collegeId}`),
 };
+
+// ── Benchmark SSR Types ─────────────────────────────────────────────────────
+
+export interface BenchmarkSubCriterionScore {
+    subNumber: string;
+    title: string;
+    estimatedMarks: number;
+    maxMarks: number;
+    confidence: 'HIGH' | 'MEDIUM' | 'LOW';
+    keyEvidence: string;
+    strengths: string[];
+}
+
+export interface BenchmarkCriterionScore {
+    criterionNumber: number;
+    title: string;
+    estimatedMarks: number;
+    maxMarks: number;
+}
+
+export interface BenchmarkSSRData {
+    collegeId: string;
+    collegeName: string;
+    city: string;
+    state: string;
+    region: string;
+    stream: string;
+    cgpa: number;
+    grade: string;
+    summary: string;
+    overallScore: number;
+    maxPossibleScore: number;
+    criteriaScores: BenchmarkCriterionScore[];
+    subCriteriaScores: BenchmarkSubCriterionScore[];
+    extractedAt: string;
+    tokensUsed: number;
+}
+
+export interface BenchmarkPdfInfo {
+    filename: string;
+    sizeMB: number;
+    url: string;
+}
 
 export default naacService;

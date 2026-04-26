@@ -66,6 +66,7 @@ const COLLEGE_ADMIN_NAV: NavGroup[] = [
             { title: 'NAAC', href: '/naac', icon: GraduationCap },
             { title: 'Best Practices', href: '/naac/best-practices', icon: Star },
             { title: 'DVV Tracker', href: '/naac/dvv', icon: ClipboardCheck },
+            { title: 'Benchmark', href: '/naac/benchmark', icon: BarChart3 },
             { title: 'Readiness', href: '/readiness', icon: Gauge, badge: 'Score' },
             { title: 'Visit Prep', href: '/visit-prep', icon: ListChecks },
         ],
